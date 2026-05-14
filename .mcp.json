@@ -1,16 +1,10 @@
 {
   "mcpServers": {
     "TorqueMCP": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-remote",
-        "https://portal.qtorque.io/mcp",
-        "--header",
-        "Authorization: Bearer ${AUTH_TOKEN}"
-      ],
-      "env": {
-        "AUTH_TOKEN": "${TORQUE_API_TOKEN}"
+      "type": "http",
+      "url": "${TORQUE_MCP_URL:-https://portal.qtorque.io/mcp}",
+      "headers": {
+        "Authorization": "Bearer ${TORQUE_API_TOKEN}"
       }
     }
   }

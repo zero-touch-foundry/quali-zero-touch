@@ -6,12 +6,18 @@ Guide a new Torque user from zero to a launched environment. Adapt to their expe
 
 ## Phase 1 — Setup check
 
-1. Confirm `TORQUE_API_TOKEN` is set. If missing, point them to the README's Authentication section and stop.
-2. Use `get_spaces` via the Torque MCP to confirm connectivity. If it fails, troubleshoot:
-   - Token expired? → regenerate at https://portal.qtorque.io
-   - Wrong URL? → verify `.mcp.json`
-   - Network? → check VPN / corporate proxy.
-3. List the spaces the user has access to. Ask which to work in.
+1. Call `get_spaces` via the Torque MCP. This single call validates token + URL + network in one step.
+2. If it succeeds → list the spaces the user has access to and ask which to work in.
+3. If it fails, diagnose the error and surface the matching fix:
+
+| Error | Likely cause | Fix to surface to user |
+|---|---|---|
+| MCP tool not available / Claude can't see Torque tools | Plugin not installed or `TORQUE_API_TOKEN` unset (Claude Code fails silently at config parse) | Tell user: set `export TORQUE_API_TOKEN="..."` in shell profile, restart Claude Code. Link to README "Authentication" section. |
+| 401 Unauthorized | Token invalid / expired | Regenerate at the Torque portal (My Account → Personal API Tokens). Re-set env var and restart. |
+| 403 Forbidden | Token scope mismatch | Use a personal API token, or scope the space token correctly. |
+| Connection refused / timeout | Wrong `TORQUE_MCP_URL` or network/VPN issue | For users using a different torque instance: `export TORQUE_MCP_URL="https://<torque.tenant.url>/mcp"`. For SaaS: check VPN, corporate proxy, firewall. |
+
+After surfacing the fix, **stop**. The user must restart Claude Code after setting env vars. Don't continue Phase 2 until `get_spaces` works.
 
 ## Phase 2 — Orient
 

@@ -46,22 +46,63 @@ Claude Code plugin for [Quali Torque](https://www.quali.com/torque/) — environ
 ### Prerequisites
 
 - [Claude Code](https://docs.claude.com/claude-code) installed
-- A Torque account with API access ([generate a token](https://docs.qtorque.io/api))
-- `node` available (for the `npx`-based MCP server)
+- A Torque account with API access — token obtained from the Torque portal (see below)
 
-### Authentication
+No Node.js / `npx` required — the MCP server uses Claude Code's built-in HTTP transport.
 
-The TorqueMCP server reads a bearer token from the `TORQUE_API_TOKEN` environment variable.
+### Step 1 — Get a Torque API token
 
-**Recommended** — set it in the Claude Code app: **Settings → Environment** → add `TORQUE_API_TOKEN=<your-token>`.
+1. Sign in to the Torque portal at the URL for your account (SaaS: `https://portal.qtorque.io`; dedicated/on-prem: your tenant URL).
+2. Open **My Account → Personal API Tokens** (or **Space Settings → Integrations → API Tokens** for a space-scoped token).
+3. Click **Generate Token**, copy the value. **Save it now** — the portal will not show it again.
 
-**Alternative** — shell profile (`~/.zshrc` or `~/.bash_profile`):
+For details and token scope guidance, see the [Torque API docs](https://docs.qtorque.io/api).
+
+### Step 2 — Set the token before launching Claude Code
+
+The TorqueMCP server reads `TORQUE_API_TOKEN` from your environment at session start. Pick one option:
+
+**Option A (recommended) — shell profile**
+
+Add to `~/.zshrc`, `~/.bash_profile`, or equivalent:
 
 ```bash
-export TORQUE_API_TOKEN="your-torque-api-token"
+export TORQUE_API_TOKEN="paste-your-token-here"
 ```
 
-> ⚠️ Do **not** commit your token to `.mcp.json` or anywhere in this repository. The `${AUTH_TOKEN}` placeholder in `.mcp.json` is resolved from the `TORQUE_API_TOKEN` environment variable at runtime.
+Restart your terminal, then run `claude`.
+
+**Option B — per-session**
+
+```bash
+TORQUE_API_TOKEN="paste-your-token-here" claude
+```
+
+**Option C — `.env` loader**
+
+If you use [direnv](https://direnv.net/) or similar, add `export TORQUE_API_TOKEN=...` to `.envrc` for the project. Do **not** commit `.envrc`.
+
+> ⚠️ Never commit the token to `.mcp.json`, `.envrc`, dotfiles, or any file pushed to a repo. The `${TORQUE_API_TOKEN}` placeholder in `.mcp.json` is resolved at runtime from your environment.
+
+### Step 3 (on-prem / dedicated only) — Override the Torque URL
+
+SaaS users skip this. If your Torque is a dedicated or self-hosted instance, also set:
+
+```bash
+export TORQUE_MCP_URL="https://torque.acme.internal/mcp"
+```
+
+The default is `https://portal.qtorque.io/mcp`.
+
+### Step 4 — Verify
+
+Run `claude`, then in the session:
+
+```
+/torque-quickstart
+```
+
+The quickstart command verifies authentication, lists your spaces, and surfaces fix-it instructions if anything is wrong.
 
 ### Install the plugin
 
@@ -77,6 +118,17 @@ claude plugin install ./
 ```
 
 (Marketplace installation instructions will be added when published.)
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Claude Code logs "MCP server `TorqueMCP` failed to start" or "config parse error" | `TORQUE_API_TOKEN` env var is unset | Set it (see [Authentication](#step-2--set-the-token-before-launching-claude-code)) and restart Claude Code. Claude Code fails silently at config-parse time when required env vars are missing without defaults. |
+| MCP tools return `401 Unauthorized` | Token invalid, expired, or wrong account | Regenerate at the Torque portal. Confirm you copied it without leading/trailing whitespace. |
+| MCP tools return `403 Forbidden` on specific tools | Token is space-scoped but tool is account-wide (or vice versa) | Use a personal API token, or scope your space token to the correct space. |
+| MCP tools time out / `connection refused` | Wrong `TORQUE_MCP_URL` for an on-prem instance | Confirm the URL with your Torque admin. Must include the `/mcp` suffix. |
+| `/launch-env` shows no blueprints | Token scoped to a space without published blueprints | Run `/catalog` against another space, or check **Catalog** in the portal. |
+| Tool list is empty / Claude doesn't see Torque tools | Plugin not loaded, or MCP entry didn't load | `claude plugin list` to verify the plugin is installed. Check `~/.claude.json` or session logs for parse errors. |
 
 ## Usage examples
 
