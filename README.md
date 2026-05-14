@@ -126,7 +126,7 @@ claude plugin install ./
 | Claude Code logs "MCP server `TorqueMCP` failed to start" or "config parse error" | `TORQUE_API_TOKEN` env var is unset | Set it (see [Authentication](#step-2--set-the-token-before-launching-claude-code)) and restart Claude Code. Claude Code fails silently at config-parse time when required env vars are missing without defaults. |
 | MCP tools return `401 Unauthorized` | Token invalid, expired, or wrong account | Regenerate at the Torque portal. Confirm you copied it without leading/trailing whitespace. |
 | MCP tools return `403 Forbidden` on specific tools | Token is space-scoped but tool is account-wide (or vice versa) | Use a personal API token, or scope your space token to the correct space. |
-| MCP tools time out / `connection refused` | Wrong `TORQUE_MCP_URL` for an on-prem instance | Confirm the URL with your Torque admin. Must include the `/mcp` suffix. |
+| MCP tools time out / `connection refused` | Wrong `TORQUE_MCP_URL` for an on-prem/dedicated instance | Confirm the URL with your Torque admin. Must include the `/mcp` suffix. |
 | `/launch-env` shows no blueprints | Token scoped to a space without published blueprints | Run `/catalog` against another space, or check **Catalog** in the portal. |
 | Tool list is empty / Claude doesn't see Torque tools | Plugin not loaded, or MCP entry didn't load | `claude plugin list` to verify the plugin is installed. Check `~/.claude.json` or session logs for parse errors. |
 
