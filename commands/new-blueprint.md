@@ -5,7 +5,7 @@ argument-hint: [blueprint-name]
 
 Help the user create a new Torque blueprint named "$ARGUMENTS".
 
-Read the torque-blueprints skill (at `${CLAUDE_PLUGIN_ROOT}/skills/torque-blueprints/SKILL.md`) and the grain types reference (at `${CLAUDE_PLUGIN_ROOT}/skills/torque-blueprints/references/grain-types.md`) before proceeding.
+Read the torque-blueprint skill (at `${CLAUDE_PLUGIN_ROOT}/skills/torque-blueprint/SKILL.md`) before proceeding.
 
 Walk through these steps interactively:
 

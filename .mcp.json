@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "Stack Automation": {
+    "TorqueMCP": {
       "command": "npx",
       "args": [
         "-y",
@@ -10,8 +10,8 @@
         "Authorization: Bearer ${AUTH_TOKEN}"
       ],
       "env": {
-        "AUTH_TOKEN": "<your-auth-token>"
+        "AUTH_TOKEN": "${TORQUE_API_TOKEN}"
       }
     }
-  },
+  }
 }

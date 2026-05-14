@@ -1,5 +1,5 @@
 {
-  "name": "torque-claude-plugin",
+  "name": "quali-claude-plugin",
   "version": "0.1.0",
   "description": "Torque DevOps toolkit — blueprint authoring, environment management, and infrastructure automation (Terraform, Ansible, Kubernetes, AWS) powered by the Torque MCP.",
   "author": {

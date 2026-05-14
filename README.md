@@ -1,78 +1,120 @@
-# torque-cowork
+# quali-claude-plugin
 
-A comprehensive DevOps toolkit for Quali, bringing Torque blueprint authoring, environment management, AWS best practices, Kubernetes operations, and Ansible automation into Claude.
+Claude Code plugin for [Quali Torque](https://www.quali.com/torque/) — environment-as-a-service for cloud infrastructure. Author blueprints, write governance policies, debug environments, migrate Terragrunt, and integrate Terraform/Ansible — all from Claude.
+
+> **Note**: plugin name (`quali-claude-plugin`) is provisional and may change before marketplace publication.
 
 ## Components
 
 ### Skills
 
-| Skill | Triggers on |
-|-------|------------|
-| **torque-blueprints** | Creating, editing, or troubleshooting Torque blueprint YAML — grain types, inputs, outputs, Liquid templating |
-| **torque-environments** | Managing, monitoring, and troubleshooting Torque environments via MCP |
-| **aws-best-practices** | AWS architecture, IAM, cost optimization, security hardening |
-| **k8s-operations** | Kubernetes troubleshooting, manifest authoring, cluster management |
-| **ansible-automation** | Ansible playbook writing, roles, collections, and Torque integration |
-| **terraform-automation** | Terraform modules, state management, HCL debugging, and Torque integration |
+| Skill | What it does |
+|-------|--------------|
+| **torque-blueprint** | Create, edit, fix, or review Torque blueprint YAML files — grains, inputs, outputs, dependencies, Liquid templating. |
+| **torque-blueprint-reviewer** | Audit blueprints for quality, security, and best practices. Annotated feedback for missing outputs, incorrect `depends-on`, hardcoded secrets, drift-prone configs. |
+| **torque-workflow** | Create, edit, fix, or review Torque workflow YAML — day-2 ops, env/space scopes, triggers, contract.json, bindings. |
+| **torque-rego** | Write and review Torque OPA/Rego governance policies — environment lifecycle, consumption, Terraform plan control, approval channels. |
+| **torque-debug-env** | Diagnose failed or stuck environments using the Torque REST API — fetches live grain state, activity feed, error logs. Requires a Torque environment URL + API token. |
+| **torque-ready-terraform** | Write, review, or refactor Terraform/OpenTofu code as reusable, parameterized Torque grains with proper outputs and provider versioning. |
+| **torque-ready-ansible** | Write or convert Ansible playbooks to be Torque-compatible — outputs, dynamic inventory, teardown, `export_torque_outputs`. |
+| **torque-terragrunt-migrate** | Migrate Terragrunt projects to Torque blueprints — dependency blocks → `depends-on`, remote_state → Torque backend, generate blocks → provider-overrides. |
+| **aws-best-practices** | AWS architecture, IAM, cost optimization, security hardening — Well-Architected guidance tailored to Torque workloads. |
+| **k8s-operations** | Kubernetes troubleshooting, manifest authoring, cluster management — useful when investigating Torque Helm/K8s grains. |
 
 ### Commands
 
 | Command | Description |
-|---------|------------|
-| `/env-status [name]` | Check a Torque environment's health and grain states |
-| `/launch-env [blueprint]` | Launch a new environment from a blueprint |
-| `/new-blueprint [name]` | Scaffold a new Torque blueprint interactively |
-| `/deploy-check [file]` | Run pre-deployment validation on a blueprint file |
+|---------|-------------|
+| `/env-status [name]` | Check a Torque environment's health and grain states. |
+| `/launch-env [blueprint]` | Launch a new environment from a blueprint, interactively gathering inputs. |
+| `/new-blueprint [name]` | Scaffold a new Torque blueprint with the `torque-blueprint` skill. |
+| `/deploy-check [file]` | Pre-deployment validation — server-side via `validate_blueprint_yaml` MCP tool + design review via `torque-blueprint-reviewer`. |
 
-### MCP Servers
+### MCP server
 
 | Server | Purpose |
 |--------|---------|
-| **TorqueMCP** | Torque Management Control Plane — environment queries, workflows, blueprint tools |
+| **TorqueMCP** | Torque API access — blueprints, environments, workflows, validation, launch operations. |
 
-## Setup
+## Installation
 
-### Torque MCP Authentication
+### Prerequisites
 
-The Torque MCP server connects to `https://portal.qtorque.io/mcp` using a bearer token.
+- [Claude Code](https://docs.claude.com/claude-code) installed
+- A Torque account with API access ([generate a token](https://docs.qtorque.io/api))
+- `node` available (for the `npx`-based MCP server)
 
-Set the `TORQUE_API_TOKEN` environment variable with your Torque API token. In the Claude desktop app, go to **Settings → Claude Code → Environment** to add it there — that way it's available to all MCP servers without needing to set it in your shell profile.
+### Authentication
 
-Alternatively, add it to your shell profile (`~/.zshrc` or `~/.bash_profile`):
+The TorqueMCP server reads a bearer token from the `TORQUE_API_TOKEN` environment variable.
+
+**Recommended** — set it in the Claude Code app: **Settings → Environment** → add `TORQUE_API_TOKEN=<your-token>`.
+
+**Alternative** — shell profile (`~/.zshrc` or `~/.bash_profile`):
 
 ```bash
 export TORQUE_API_TOKEN="your-torque-api-token"
 ```
 
-> **Tip**: You can also hardcode the token directly in `.mcp.json` if this plugin is for personal use, but using an environment variable is recommended when sharing the plugin across the team.
+> ⚠️ Do **not** commit your token to `.mcp.json` or anywhere in this repository. The `${AUTH_TOKEN}` placeholder in `.mcp.json` is resolved from the `TORQUE_API_TOKEN` environment variable at runtime.
 
-## Usage
+### Install the plugin
 
-**Launch an environment:**
-```
-/launch-env my-blueprint
+This plugin is not yet published to the Anthropic marketplace. To install locally:
+
+```bash
+# Clone the repo
+git clone <repo-url> quali-claude-plugin
+cd quali-claude-plugin
+
+# Install as a local Claude Code plugin
+claude plugin install ./
 ```
 
-**Check an environment:**
-```
-/env-status my-production-env
-```
+(Marketplace installation instructions will be added when published.)
 
-**Create a new blueprint:**
+## Usage examples
+
+**Author a new blueprint:**
 ```
-/new-blueprint my-new-service
+/new-blueprint my-web-stack
 ```
+or, naturally:
+> "Write a Torque blueprint that deploys an EKS cluster with a Helm chart for our app."
 
 **Validate before deploying:**
 ```
-/deploy-check path/to/blueprints/my-blueprint.yaml
+/deploy-check blueprints/my-stack.yaml
 ```
 
-**Ask about blueprints naturally:**
-> "Help me add a Terraform grain for an S3 bucket to my blueprint"
+**Debug a failing environment:**
+> "My environment at https://portal.qtorque.io/.../env/abc123 is stuck. Here's my token: ... — what failed?"
 
-**Troubleshoot environments:**
-> "My staging environment is showing errors, can you check what's wrong?"
+**Write a governance policy:**
+> "Write a Rego policy that blocks environments longer than 8 hours unless tagged `long-running: true`."
 
-**Get AWS guidance:**
-> "What's the best IAM policy for our Torque agents?"
+**Migrate from Terragrunt:**
+> "Convert this `terragrunt.hcl` to a Torque blueprint."
+
+**Review a blueprint:**
+> "Review blueprints/prod.yaml for security and best practices."
+
+## Repo layout
+
+```
+.
+├── .claude-plugin/plugin.json   # plugin manifest
+├── .mcp.json                    # TorqueMCP server config
+├── commands/                    # slash commands
+└── skills/                      # 10 skills (Torque + AWS + k8s)
+```
+
+## Contributing
+
+Skills under `skills/torque-*` mirror the public [torque-ai-skills repo](https://github.com/QualiTorque) and should stay in sync. Don't fork them here; PR upstream.
+
+Generic skills (`aws-best-practices`, `k8s-operations`) are plugin-local — edit directly.
+
+## License
+
+Pending — license file will be added before public release.
