@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Quali Torque documentation
+    url: https://docs.qtorque.io
+    about: Product docs for Torque itself (not the plugin).
+  - name: Quali Support
+    url: https://www.quali.com/support/
+    about: For account, billing, or production support.

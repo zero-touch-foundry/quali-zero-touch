@@ -18,6 +18,7 @@ Claude Code plugin for [Quali Torque](https://www.quali.com/torque/) — environ
 | **torque-ready-terraform** | Write, review, or refactor Terraform/OpenTofu code as reusable, parameterized Torque grains with proper outputs and provider versioning. |
 | **torque-ready-ansible** | Write or convert Ansible playbooks to be Torque-compatible — outputs, dynamic inventory, teardown, `export_torque_outputs`. |
 | **torque-terragrunt-migrate** | Migrate Terragrunt projects to Torque blueprints — dependency blocks → `depends-on`, remote_state → Torque backend, generate blocks → provider-overrides. |
+| **torque-cost-analysis** | Estimate and optimize Torque environment / blueprint cost — per-grain breakdown, right-sizing suggestions, before/after comparisons. |
 | **aws-best-practices** | AWS architecture, IAM, cost optimization, security hardening — Well-Architected guidance tailored to Torque workloads. |
 | **k8s-operations** | Kubernetes troubleshooting, manifest authoring, cluster management — useful when investigating Torque Helm/K8s grains. |
 
@@ -29,6 +30,10 @@ Claude Code plugin for [Quali Torque](https://www.quali.com/torque/) — environ
 | `/launch-env [blueprint]` | Launch a new environment from a blueprint, interactively gathering inputs. |
 | `/new-blueprint [name]` | Scaffold a new Torque blueprint with the `torque-blueprint` skill. |
 | `/deploy-check [file]` | Pre-deployment validation — server-side via `validate_blueprint_yaml` MCP tool + design review via `torque-blueprint-reviewer`. |
+| `/run-workflow [env] [workflow]` | Run a Torque day-2 workflow on an environment, with input prompting and confirmation. |
+| `/catalog [filter]` | List published blueprints (catalog items) available to launch in the current space. |
+| `/torque-quickstart` | First-time user walkthrough — auth check, space selection, first launch or first blueprint. |
+| `/blueprint-from-asset [path]` | Scaffold a Torque blueprint from an existing IaC asset (Terraform, OpenTofu, Helm, Ansible, K8s, CloudFormation, Terragrunt). Auto-detects type. |
 
 ### MCP server
 
@@ -105,8 +110,11 @@ or, naturally:
 .
 ├── .claude-plugin/plugin.json   # plugin manifest
 ├── .mcp.json                    # TorqueMCP server config
-├── commands/                    # slash commands
-└── skills/                      # 10 skills (Torque + AWS + k8s)
+├── .github/ISSUE_TEMPLATE/      # bug + feature request templates
+├── assets/icon.png              # marketplace icon (placeholder)
+├── AGENTS.md                    # orientation for AI coding agents working on this repo
+├── commands/                    # slash commands (8)
+└── skills/                      # skills (11 total — Torque + AWS + k8s + cost analysis)
 ```
 
 ## Contributing
