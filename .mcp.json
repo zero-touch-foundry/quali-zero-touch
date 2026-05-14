@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "Stack Automation": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://portal.qtorque.io/mcp",
+        "--header",
+        "Authorization: Bearer ${AUTH_TOKEN}"
+      ],
+      "env": {
+        "AUTH_TOKEN": "<your-auth-token>"
+      }
+    }
+  },
+}
