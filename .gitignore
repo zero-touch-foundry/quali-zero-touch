@@ -2,3 +2,5 @@ temp-*
 PLAN.md
 .DS_Store
 .claude/settings.local.json
+blueprints/*
+dist/
