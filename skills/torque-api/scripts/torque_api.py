@@ -1,15 +1,27 @@
 #!/usr/bin/env python3
 """Torque REST API helper. Stdlib only.
 
-Two modes:
-  CLI:    python torque_api.py GET /spaces
-          python torque_api.py POST /spaces/foo/validations/blueprints --body '{...}'
-  Import: from torque_api import request, TorqueError
-          data = request("GET", "/spaces")
+Modes:
+  CLI request:   python torque_api.py GET /spaces
+                 python torque_api.py POST /spaces/foo/validations/blueprints --body '{...}'
+  CLI configure: python torque_api.py configure --token TOK [--host HOST]
+                 python torque_api.py configure --show
+                 python torque_api.py configure --clear
+  Import:        from torque_api import request, TorqueError
+                 data = request("GET", "/spaces")
 
-Env:
-  TORQUE_API_TOKEN  required, bearer token
-  TORQUE_API_HOST   optional, default portal.qtorque.io
+Credential resolution order:
+  Token: TORQUE_API_TOKEN env var → config file `token` → error
+  Host:  TORQUE_API_HOST  env var → config file `host`  → portal.qtorque.io
+
+Config file path (in order):
+  $TORQUE_CONFIG_FILE                                          (escape hatch)
+  $XDG_CONFIG_HOME/quali-torque/config  or  ~/.config/quali-torque/config  (Unix)
+  %APPDATA%\\quali-torque\\config                                (Windows)
+
+Format (INI-ish, no section header):
+  token = eyJhbGciOi...
+  host  = portal.qtorque.io
 
 Paths may be given with or without the leading "/api/" — both work.
 Responses are parsed as JSON when Content-Type allows; otherwise text is returned.
@@ -58,14 +70,78 @@ class TorqueValidationError(TorqueError):
     """422 / 400 — bad request body or params."""
 
 
+def _config_path() -> str:
+    override = os.environ.get("TORQUE_CONFIG_FILE")
+    if override:
+        return override
+    if os.name == "nt":
+        base = os.environ.get("APPDATA") or os.path.expanduser("~\\AppData\\Roaming")
+    else:
+        base = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
+    return os.path.join(base, "quali-torque", "config")
+
+
+def _read_config_file() -> Dict[str, str]:
+    """Parse the config file. Returns {} if missing or unreadable."""
+    path = _config_path()
+    if not os.path.isfile(path):
+        return {}
+    out: Dict[str, str] = {}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                out[k.strip().lower()] = v.strip()
+    except OSError:
+        return {}
+    return out
+
+
+def _write_config_file(values: Mapping[str, str]) -> str:
+    """Write config file with chmod 600 on POSIX. Returns path."""
+    path = _config_path()
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    lines = [f"{k} = {v}" for k, v in values.items() if v]
+    text = "\n".join(lines) + "\n"
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(text)
+    finally:
+        if os.name != "nt":
+            try:
+                os.chmod(path, 0o600)
+            except OSError:
+                pass
+    return path
+
+
 def _host() -> str:
-    return os.environ.get("TORQUE_API_HOST", DEFAULT_HOST).strip().rstrip("/")
+    env = os.environ.get("TORQUE_API_HOST", "").strip()
+    if env:
+        return env.rstrip("/")
+    cfg = _read_config_file().get("host", "").strip()
+    if cfg:
+        return cfg.rstrip("/")
+    return DEFAULT_HOST
 
 
 def _token() -> str:
     tok = os.environ.get("TORQUE_API_TOKEN", "").strip()
     if not tok:
-        raise TorqueAuthError(0, None, "TORQUE_API_TOKEN env var is not set")
+        tok = _read_config_file().get("token", "").strip()
+    if not tok:
+        raise TorqueAuthError(
+            0,
+            None,
+            "Torque API token not configured. Set TORQUE_API_TOKEN env var, or run: "
+            "`python torque_api.py configure --token <YOUR_TOKEN>`",
+        )
     return tok
 
 
@@ -181,8 +257,82 @@ def _parse_body(raw: bytes, content_type: str) -> Union[Any, str]:
 
 # ---- CLI ----
 
-def _cli() -> int:
-    p = argparse.ArgumentParser(description="Torque REST API helper")
+HTTP_METHODS = {"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
+
+
+def _mask_token(tok: str) -> str:
+    if not tok:
+        return "(unset)"
+    if len(tok) <= 8:
+        return "***"
+    return f"{tok[:4]}…{tok[-4:]}"
+
+
+def _cli_configure(argv: list) -> int:
+    p = argparse.ArgumentParser(
+        prog="torque_api.py configure",
+        description="Write Torque credentials to the plugin config file.",
+    )
+    p.add_argument("--token", help="Torque API bearer token")
+    p.add_argument("--host", help="Torque API hostname (no scheme). Default: portal.qtorque.io")
+    p.add_argument("--show", action="store_true", help="Print current config (token masked) and exit")
+    p.add_argument("--clear", action="store_true", help="Delete the config file and exit")
+    p.add_argument(
+        "--token-stdin",
+        action="store_true",
+        help="Read token from stdin (avoids leaking it into shell history)",
+    )
+    args = p.parse_args(argv)
+
+    path = _config_path()
+
+    if args.clear:
+        if os.path.isfile(path):
+            os.remove(path)
+            print(f"Removed {path}")
+        else:
+            print(f"No config file at {path}")
+        return 0
+
+    if args.show:
+        cfg = _read_config_file()
+        print(f"Config file: {path}")
+        print(f"  token = {_mask_token(cfg.get('token', ''))}")
+        print(f"  host  = {cfg.get('host', '') or DEFAULT_HOST + ' (default)'}")
+        env_tok = os.environ.get("TORQUE_API_TOKEN", "")
+        env_host = os.environ.get("TORQUE_API_HOST", "")
+        if env_tok or env_host:
+            print("Env overrides (take precedence):")
+            if env_tok:
+                print(f"  TORQUE_API_TOKEN = {_mask_token(env_tok)}")
+            if env_host:
+                print(f"  TORQUE_API_HOST  = {env_host}")
+        return 0
+
+    token = args.token
+    if args.token_stdin:
+        token = sys.stdin.read().strip()
+    if not token and not args.host:
+        print("Nothing to write. Provide --token / --token-stdin and/or --host.", file=sys.stderr)
+        return 2
+
+    existing = _read_config_file()
+    new = dict(existing)
+    if token:
+        new["token"] = token
+    if args.host:
+        new["host"] = args.host.strip().rstrip("/")
+    written = _write_config_file(new)
+    print(f"Wrote {written}")
+    if "token" in new:
+        print(f"  token = {_mask_token(new['token'])}")
+    if "host" in new:
+        print(f"  host  = {new['host']}")
+    return 0
+
+
+def _cli_request(argv: list) -> int:
+    p = argparse.ArgumentParser(prog="torque_api.py", description="Torque REST API helper")
     p.add_argument("method", help="HTTP method (GET, POST, PUT, PATCH, DELETE)")
     p.add_argument("path", help="API path, e.g. /spaces or /spaces/foo/environments")
     p.add_argument(
@@ -202,7 +352,7 @@ def _cli() -> int:
         action="store_true",
         help="Print response without pretty-printing",
     )
-    args = p.parse_args()
+    args = p.parse_args(argv)
 
     body: Any = None
     if args.body is not None:
@@ -232,7 +382,7 @@ def _cli() -> int:
             query[k] = v
 
     try:
-        status, parsed = request(
+        _, parsed = request(
             args.method, args.path, body=body, query=query, timeout=args.timeout
         )
     except TorqueError as e:
@@ -249,6 +399,16 @@ def _cli() -> int:
     else:
         print(json.dumps(parsed, indent=2))
     return 0
+
+
+def _cli() -> int:
+    argv = sys.argv[1:]
+    if argv and argv[0] == "configure":
+        return _cli_configure(argv[1:])
+    if argv and argv[0].upper() in HTTP_METHODS:
+        return _cli_request(argv)
+    # Help / unknown — let request parser print usage.
+    return _cli_request(argv)
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ The helper script (`torque_api.py`) raises typed exceptions and the CLI prints `
 
 | HTTP | Exception (`torque_api.py`) | Meaning | What to surface to user |
 |---|---|---|---|
-| 401 | `TorqueAuthError` | Token missing, invalid, or expired | "Regenerate token at portal.qtorque.io → My Account → Personal API Tokens. Re-export `TORQUE_API_TOKEN` and restart Claude Code." |
+| 401 | `TorqueAuthError` | Token missing, invalid, or expired | "Regenerate token at `<host>/my-token`. Re-run `configure --token-stdin` with the new value." |
 | 403 | `TorqueForbidden` | Token scope insufficient (e.g. space token used for account-wide call) | "Use a personal API token, or scope the space token to the correct space." |
 | 404 | `TorqueNotFound` | Space / env / blueprint name wrong, or resource already deleted | "Double-check the name. List spaces with `get_spaces.py` to confirm." |
 | 400, 422 | `TorqueValidationError` | Bad request body or params (e.g. missing required input on launch) | Echo the `errors[]` array — usually has field paths. |
@@ -33,4 +33,5 @@ The CLI prints the parsed body for 2xx and writes `ERROR HTTP <code>` + body to 
 
 - Do not retry on 401/403 — token problems don't fix themselves. Surface immediately.
 - Do not silently swallow `TorqueValidationError` — its body contains the user's actionable fix.
-- Do not hardcode `https://portal.qtorque.io` in any script or skill. Always go through the helper so `TORQUE_API_HOST` is honored.
+- Do not hardcode `https://portal.qtorque.io` in any script or skill. Always go through the helper so the host resolution chain is honored.
+- Do not put a raw token in argv (`configure --token "<value>"`) — it leaks into shell history and Claude transcripts. Always use `--token-stdin` with `printf '%s' "<token>" | ... configure --token-stdin`.

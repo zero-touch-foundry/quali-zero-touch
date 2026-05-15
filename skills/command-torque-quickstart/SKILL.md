@@ -15,31 +15,48 @@ Guide a new Torque user from zero to a launched environment. Adapt to their expe
 
 ## Phase 1 — Setup check
 
-### Step 1a — Pre-flight check for `TORQUE_API_TOKEN`
+### Step 1a — Pre-flight check for credentials
 
-Before calling any Torque API, verify the env var exists. Run this via Bash:
+The plugin stores the API token + host in a config file (`~/.config/quali-torque/config` on Unix, `%APPDATA%\quali-torque\config` on Windows), `chmod 600`. The helper script reads it automatically — no `export` needed per session. The `TORQUE_API_TOKEN` / `TORQUE_API_HOST` env vars still work and override the file when set.
+
+Check current state:
 
 ```bash
-test -n "$TORQUE_API_TOKEN" && echo "TOKEN_OK" || echo "TOKEN_MISSING"
+python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" configure --show
 ```
 
-(On Windows / cmd, use `if defined TORQUE_API_TOKEN echo TOKEN_OK`. In PowerShell: `if ($env:TORQUE_API_TOKEN) { 'TOKEN_OK' } else { 'TOKEN_MISSING' }`.)
+Output is either credentials with the token masked, or a hint that nothing is configured.
 
-If output is `TOKEN_MISSING`:
+If no token is configured:
 
 1. Determine the portal host first so the token link points to the right place:
    - Ask: "Are you on Torque SaaS (portal.qtorque.io) or a dedicated / self-hosted tenant?"
-   - If self-hosted, ask for the hostname and have them `export TORQUE_API_HOST="<hostname>"` (hostname only — no scheme, no path).
-   - Default for SaaS: `portal.qtorque.io`.
+   - SaaS default: `portal.qtorque.io`. For self-hosted, ask for the hostname (no scheme, no path).
 2. Ask: "Do you already have a Torque API token, or do you need to generate one?"
    - If they need one, send them directly to the **My Token** page on their portal:
      - SaaS: <https://portal.qtorque.io/my-token>
-     - Self-hosted: `https://<their TORQUE_API_HOST>/my-token`
+     - Self-hosted: `https://<their host>/my-token`
 
      That page shows the token and lets them copy it in one click. Wait for them to copy it.
-3. Offer to export it for the current session (preferred) — `export TORQUE_API_TOKEN="..."`. The user's memory says: prefer `export` over editing shell profile dotfiles.
-4. If the user wants persistence across restarts and asks you to write to a profile, only then propose appending to `~/.zshrc` / `~/.bashrc` / `~/.bash_profile` (detect via `$SHELL`). Confirm with the user first. Treat the token as sensitive — do not echo it. After writing, `chmod 600` the file if it's not already private.
-5. On Windows, walk the user through **Settings → System → About → Advanced system settings → Environment Variables → User variables** to add `TORQUE_API_TOKEN`. Then restart Claude Code / Claude Desktop fully.
+3. Write the credentials to the config file. **Use `--token-stdin` so the token doesn't appear in the bash command (avoids shell history + transcript leakage).** Treat the token as sensitive — never echo it back in subsequent messages.
+
+   ```bash
+   # SaaS:
+   printf '%s' "<TOKEN>" | python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" \
+     configure --token-stdin
+
+   # Self-hosted (writes both token + host):
+   printf '%s' "<TOKEN>" | python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" \
+     configure --token-stdin --host "<HOSTNAME>"
+   ```
+4. Confirm with `configure --show` that the masked token appears and the host is right.
+
+Other ways to set credentials (advanced):
+
+- Per-session env vars: `export TORQUE_API_TOKEN="..."` and optional `export TORQUE_API_HOST="..."`. Override the config file when set. Useful for CI, debugging, or temporarily switching tenants.
+- To change the host later: `... configure --host "<NEW_HOST>"` (preserves existing token).
+- To rotate the token: re-run the `--token-stdin` command with the new value.
+- To wipe credentials: `... configure --clear`.
 
 ### Step 1b — Validate live
 
@@ -54,10 +71,10 @@ python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_spaces.py" 
 
 | Error | Likely cause | Fix to surface |
 |---|---|---|
-| `ERROR HTTP 401` | Token invalid / expired | Regenerate at the Torque portal (My Account → Personal API Tokens). Re-export `TORQUE_API_TOKEN`. |
+| `ERROR HTTP 401` | Token invalid / expired | Regenerate at the portal's `/my-token` page. Re-run `configure --token-stdin` with the new value. |
 | `ERROR HTTP 403` | Token scope mismatch | Use a personal API token, or scope the space token correctly. |
-| `ERROR HTTP 0` / connection refused / timeout | Wrong `TORQUE_API_HOST` or network/VPN issue | Self-hosted: `export TORQUE_API_HOST="<tenant-host>"`. SaaS: check VPN, corporate proxy, firewall. |
-| `TORQUE_API_TOKEN env var is not set` | Env var not exported in the current Claude Code session | Re-export in the same shell, then restart Claude Code so it inherits. |
+| `ERROR HTTP 0` / connection refused / timeout | Wrong host or network/VPN issue | Self-hosted: `... configure --host "<tenant-host>"`. SaaS: check VPN, corporate proxy, firewall. |
+| `Torque API token not configured` | Config file missing and `TORQUE_API_TOKEN` env var unset | Re-run Step 1a (`configure --token-stdin`). |
 | `python: command not found` | Python 3.8+ not on PATH | Install Python 3 or set up an alias to `python3`. |
 
 After surfacing the fix, **stop**. Don't continue Phase 2 until `get_spaces.py` works.

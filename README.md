@@ -70,44 +70,42 @@ To extend with a new Torque API operation, see `skills/torque-api/SKILL.md` — 
 
 For space-scoped tokens or token-scope guidance, see **Space Settings → Integrations → API Tokens** in the portal, or the [Torque API docs](https://docs.qtorque.io/api).
 
-### Step 2 — Set the token before launching Claude Code
+### Step 2 — Configure credentials (one time)
 
-The helper scripts read `TORQUE_API_TOKEN` from your environment at call time. Pick one option:
+Run `/torque-quickstart` after installing the plugin (next step) and Claude will walk you through it. The skill writes the token + host to a `chmod 600` config file at:
 
-**Option A (recommended) — `export` in the shell you launch Claude Code from**
+- Linux/macOS: `~/.config/quali-torque/config`
+- Windows: `%APPDATA%\quali-torque\config`
 
-```bash
-export TORQUE_API_TOKEN="paste-your-token-here"
-claude
-```
+Helper scripts read this file on every call — no need to `export` the token each session. The skill uses `--token-stdin` so the raw token never appears in your shell history or Claude transcript.
 
-**Option B — per-session**
+If you prefer to do it manually:
 
 ```bash
-TORQUE_API_TOKEN="paste-your-token-here" claude
+# Token (piped so it stays out of shell history):
+printf '%s' "PASTE_YOUR_TOKEN_HERE" | \
+  python ~/path/to/plugin/skills/torque-api/scripts/torque_api.py configure --token-stdin
+
+# Self-hosted host (SaaS users skip):
+python ~/path/to/plugin/skills/torque-api/scripts/torque_api.py configure --host tenant.example.com
+
+# Inspect (token shown masked):
+python ~/path/to/plugin/skills/torque-api/scripts/torque_api.py configure --show
+
+# Wipe:
+python ~/path/to/plugin/skills/torque-api/scripts/torque_api.py configure --clear
 ```
 
-**Option C — persistent in a shell profile**
-
-If you want it to persist across reboots, add `export TORQUE_API_TOKEN="..."` to `~/.zshrc`, `~/.bash_profile`, or (for GUI-app inheritance on macOS) `~/.zshenv`. Restart your terminal.
-
-**Option D — `.env` loader**
-
-If you use [direnv](https://direnv.net/) or similar, add `export TORQUE_API_TOKEN=...` to `.envrc`. Do **not** commit `.envrc`.
-
-> ⚠️ Never commit the token to any file pushed to a repo.
-
-### Step 3 (on-prem / dedicated only) — Override the Torque host
-
-SaaS users skip this. If your Torque is a dedicated or self-hosted instance, also set:
+**Env-var overrides** (useful for CI, debugging, swapping tenants) — set either and the helper will use it instead of the config file:
 
 ```bash
-export TORQUE_API_HOST="torque.acme.internal"
+export TORQUE_API_TOKEN="..."
+export TORQUE_API_HOST="tenant.example.com"   # hostname only, no scheme, no path
 ```
 
-Hostname only — no `https://`, no path. The default is `portal.qtorque.io`.
+> ⚠️ Never commit the config file or token to any repo.
 
-### Step 4 — Verify
+### Step 3 — Verify
 
 Run `claude`, then in the session:
 
@@ -170,17 +168,17 @@ Open Claude Desktop → **Code** tab → **+** button next to the prompt → **P
 
 The repo also ships a `.claude-plugin/marketplace.json`, so once it's hosted on a public git remote you'll also be able to install via `/plugin marketplace add <owner>/<repo>` — both Code and Cowork. Until then, zip upload is the path.
 
-**Step 3 — set env vars**
+**Step 3 — configure credentials**
 
-Claude Desktop reads env vars from the OS environment at app launch.
+In the Code tab, type `/torque-quickstart`. It will:
+- check whether credentials are already configured (`configure --show`),
+- if not, ask for the host (SaaS vs self-hosted), point you at `<host>/my-token`, and write the token to the config file via `configure --token-stdin`.
 
-- **macOS**: add `export TORQUE_API_TOKEN="..."` (and optional `export TORQUE_API_HOST="..."`) to `~/.zshenv`. `.zshenv` loads for all zsh processes including those spawned by GUI apps; `.zshrc` loads only for interactive shells and is **not** read when launching Claude Desktop from Finder. Log out and back in, or restart, after editing.
-- **Linux**: same idea — use `~/.profile` (loaded at login) rather than `~/.bashrc` (interactive-only). Log out and back in.
-- **Windows**: open **Settings → System → About → Advanced system settings → Environment Variables**. Add `TORQUE_API_TOKEN` (and optional `TORQUE_API_HOST`) under **User variables**. Click OK, then fully quit Claude Desktop (right-click tray icon → **Quit**, not just closing the window) and reopen it.
+The config file path is OS-default (`~/.config/quali-torque/config` on macOS/Linux, `%APPDATA%\quali-torque\config` on Windows), `chmod 600`. The plugin's helper scripts read it on every call — no shell-profile or env-var setup needed.
 
 **Step 4 — verify**
 
-In the Code tab, type `/torque-quickstart`. It checks the env var, surfaces fix-it instructions if missing, then runs `get_spaces.py` to confirm end-to-end auth.
+`/torque-quickstart` finishes by listing your spaces via `get_spaces.py` to confirm end-to-end auth.
 
 ## Troubleshooting
 
@@ -188,10 +186,10 @@ Full error reference: `skills/torque-api/references/errors.md`.
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Script error: `TORQUE_API_TOKEN env var is not set` | Env var unset in the shell that launched Claude Code | `export TORQUE_API_TOKEN="..."` and restart Claude Code so the new env is inherited. |
+| Script error: `Torque API token not configured` | Config file missing and `TORQUE_API_TOKEN` env unset | Run `/torque-quickstart`, or manually: `printf '%s' "<TOKEN>" \| python skills/torque-api/scripts/torque_api.py configure --token-stdin`. |
 | `ERROR HTTP 401` | Token invalid, expired, or wrong account | Regenerate at the Torque portal. Confirm no leading/trailing whitespace. |
 | `ERROR HTTP 403` | Token scope mismatch (space-scoped vs account-wide) | Use a personal API token, or scope your space token to the correct space. |
-| `ERROR HTTP 0` / connection refused / timeout | Wrong `TORQUE_API_HOST` for an on-prem/dedicated tenant, or VPN/proxy issue | `export TORQUE_API_HOST="<tenant-host>"` (hostname only). Verify VPN / proxy. |
+| `ERROR HTTP 0` / connection refused / timeout | Wrong host for an on-prem/dedicated tenant, or VPN/proxy issue | `python skills/torque-api/scripts/torque_api.py configure --host "<tenant-host>"` (hostname only). Verify VPN / proxy. |
 | `/launch-env` shows no blueprints | Token scoped to a space without published blueprints | Run `/catalog` against another space, or check **Catalog** in the portal. |
 | `python: command not found` | Python 3.8+ not on PATH | Install Python 3 or expose `python3` as `python`. |
 | Plugin not visible / Claude doesn't see Torque skills | Plugin not loaded | `claude plugin list` to verify install. Check `~/.claude.json` or session logs for parse errors. |

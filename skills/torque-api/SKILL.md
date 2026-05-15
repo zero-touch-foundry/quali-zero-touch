@@ -23,15 +23,20 @@ Every Torque-skill in this plugin calls Torque through these scripts. **No raw `
 
 ## Quick start (when invoking from another skill)
 
-1. Confirm `TORQUE_API_TOKEN` is set (skills should do a `test -n "$TORQUE_API_TOKEN"` pre-flight; `command-torque-quickstart` walks new users through this).
+1. Verify credentials are configured (once per machine — survives Claude Code restarts):
+
+   ```bash
+   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" configure --show
+   ```
+
+   If nothing's set, the `command-torque-quickstart` skill walks the user through setup (writes the config file with `--token-stdin` so the token never appears in transcript / shell history).
+
 2. Pick the right example script from the table in `references/endpoints.md`.
-3. Run it via Bash:
+3. Run it via Bash — no `export` needed; helper reads the config file:
 
    ```bash
    python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_environments.py" --space my-space
    ```
-
-   (Or from a clone of the repo, the relative `skills/torque-api/scripts/examples/...` path.)
 
 4. The script prints JSON to stdout on success and `ERROR HTTP <code>` + body to stderr on failure (non-zero exit code).
 5. Parse the JSON, use `references/response_shapes.md` to know which fields to surface, use `references/errors.md` to map error codes to user-facing fixes.
@@ -50,9 +55,33 @@ python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" \
 ```
 
 The helper:
-- reads `TORQUE_API_TOKEN` and `TORQUE_API_HOST` (default `portal.qtorque.io`),
+- resolves token via `TORQUE_API_TOKEN` env → config file `token`,
+- resolves host via `TORQUE_API_HOST` env → config file `host` → `portal.qtorque.io`,
 - auto-prepends `/api/` to the path (write `/spaces`, not `/api/spaces`),
 - maps 401/403/404/422 to typed exceptions / stderr messages.
+
+### `configure` subcommand
+
+Manage the config file (`~/.config/quali-torque/config` on Unix, `%APPDATA%\quali-torque\config` on Windows, `chmod 600`):
+
+```bash
+# Show current state (token masked)
+... torque_api.py configure --show
+
+# Write token via stdin (avoids shell history / transcript leak)
+printf '%s' "$TOKEN" | ... torque_api.py configure --token-stdin
+
+# Set self-hosted host
+... torque_api.py configure --host tenant.example.com
+
+# Both at once
+printf '%s' "$TOKEN" | ... torque_api.py configure --token-stdin --host tenant.example.com
+
+# Wipe credentials
+... torque_api.py configure --clear
+```
+
+Skills writing the token should always use `--token-stdin` and pipe via `printf '%s' "<TOKEN>"` — never put the raw token in argv.
 
 ## Files
 
@@ -100,15 +129,26 @@ When the user (or another agent) adds a new endpoint:
 
 No edits to `torque_api.py` are needed unless a new auth mechanism or transport (e.g. SSE) is required.
 
-## Environment variables
+## Credentials & environment variables
+
+Default storage is the config file (managed via `configure` subcommand above). Env vars override the file:
 
 | Var | Purpose | Default |
 |---|---|---|
-| `TORQUE_API_TOKEN` | Bearer token. **Required.** | — |
-| `TORQUE_API_HOST` | Hostname only (no scheme, no path). | `portal.qtorque.io` |
+| `TORQUE_API_TOKEN` | Bearer token. Overrides config file `token`. | — |
+| `TORQUE_API_HOST` | Hostname only (no scheme, no path). Overrides config file `host`. | `portal.qtorque.io` |
+| `TORQUE_CONFIG_FILE` | Override config file path (escape hatch). | OS default (see below) |
 | `HTTPS_PROXY` / `HTTP_PROXY` | Honored automatically by `urllib`. | — |
 
-For self-hosted / dedicated Torque tenants: `export TORQUE_API_HOST="tenant.example.com"`.
+Config file path:
+- Linux/macOS: `$XDG_CONFIG_HOME/quali-torque/config` (else `~/.config/quali-torque/config`)
+- Windows: `%APPDATA%\quali-torque\config`
+
+Format (INI-ish, no section header):
+```
+token = eyJhbGciOi...
+host  = portal.qtorque.io
+```
 
 ## What this skill does NOT do
 

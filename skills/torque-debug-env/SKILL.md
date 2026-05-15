@@ -20,7 +20,7 @@ description: >
 Live Swagger spec (always fetch to check for new endpoints):
 `https://portal.qtorque.io/swagger/latest/swagger.yaml`
 
-**All HTTP calls go through the shared helper** at `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py` (and its example scripts). The helper handles auth (`TORQUE_API_TOKEN`), host resolution (`TORQUE_API_HOST`, default `portal.qtorque.io`), and typed error mapping. Do NOT call `curl` or `urllib` directly. See `skills/torque-api/SKILL.md` for usage.
+**All HTTP calls go through the shared helper** at `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py` (and its example scripts). The helper resolves the token (config file or `TORQUE_API_TOKEN` env), host (config file or `TORQUE_API_HOST` env, default `portal.qtorque.io`), and maps errors. Do NOT call `curl` or `urllib` directly. See `skills/torque-api/SKILL.md` for usage, including the `configure` subcommand for persistent credentials.
 
 For one-off calls to endpoints not yet wrapped as example scripts:
 ```bash
@@ -42,10 +42,10 @@ Extract: **hostname**, **space_name**, **environment_id**.
 
 ### Manual fallback
 Ask the user for:
-- **API token** — must be exported as `TORQUE_API_TOKEN` in the shell before running scripts. Generated at: Help → Community Integrations → any CI tool → Configure → Generate New Token, or via https://portal.qtorque.io/api_reference.
+- **API token** — must be configured before running scripts. Run `python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" configure --show` to check. If not set, see `command-torque-quickstart` (sends user to `<host>/my-token`, writes via `configure --token-stdin`).
 - **Space name**
 - **Environment ID**
-- For self-hosted / dedicated tenants: `TORQUE_API_HOST` env var must point to the hostname.
+- For self-hosted / dedicated tenants: configure the host with `... configure --host "<hostname>"` (or `export TORQUE_API_HOST`).
 
 Auth + content-type are handled by the helper; you don't set them per call.
 
@@ -264,7 +264,7 @@ The helper script prints `ERROR HTTP <code>` to stderr on failures. Map them wit
 
 | HTTP code | Meaning | Action |
 |---|---|---|
-| `401` | Token invalid or expired | Generate a new long token at Space → Settings → Integrations → Generate New Token. Re-export `TORQUE_API_TOKEN`. |
+| `401` | Token invalid or expired | Generate a new long token at `<host>/my-token` (or Space → Settings → Integrations → Generate New Token). Re-run `... configure --token-stdin`. |
 | `403` | Token lacks access to this space | User needs at least Viewer role in the space |
 | `404` on environment | Wrong ID or space name, or environment already terminated | Double-check URL; confirm env still exists in the UI |
 | `424` | Cloud account not accessible | The cloud credential linked to the space is broken; check Space → Cloud Accounts |
