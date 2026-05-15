@@ -19,6 +19,16 @@ When a Torque environment launches an Ansible grain, four things happen in order
  
 ---
  
+## Greenfield projects — defer to `torque-repo-conventions` for repo layout
+ 
+This skill owns the **internal** structure of an Ansible playbook folder (playbook.yml, inventory/, roles/, outputs handling). It does NOT own **where in the repo** that folder lives.
+ 
+If you are creating a playbook from scratch as part of building a new Torque project — i.e. there is no existing repo layout to follow — **invoke the `torque-repo-conventions` skill FIRST** to lock in the canonical location (`ansible/<playbook-name>/` at repo root), then return here for the playbook's internal files.
+ 
+Do NOT improvise paths like `blueprints/<blueprint-name>/ansible/` — that violates convention and hides reuse.
+ 
+---
+ 
 ## The 7 Rules
  
 Apply all 7 rules when writing or reviewing a playbook. Then use the checklist at the end to verify.

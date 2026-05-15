@@ -67,6 +67,12 @@ Before writing, make sure you understand:
 
 If key info is missing, ask before writing. A well-specified blueprint beats a generic one.
 
+### Greenfield projects — defer to `torque-repo-conventions`
+
+If the user has **no existing IaC** and you are about to scaffold both the blueprint AND its grain assets (Terraform module, Helm chart, scripts) in the same flow, **invoke the `torque-repo-conventions` skill FIRST**. It owns the canonical repo layout — where blueprints live, where each grain kind's assets live, naming rules. Do NOT improvise file paths like `blueprints/<name>/blueprint.yaml` or `blueprints/<name>/terraform/` — those violate convention.
+
+After repo layout is decided, return here to write the blueprint YAML, and invoke the relevant per-kind skill (`torque-ready-terraform`, `torque-ready-ansible`, …) for the grain assets themselves.
+
 ---
 
 ## Step 3 — Blueprint Structure Reference

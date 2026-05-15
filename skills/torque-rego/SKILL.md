@@ -23,6 +23,14 @@ You will write correct, well-commented, production-ready Rego policies.
 
 ---
 
+## Greenfield projects — defer to `torque-repo-conventions` for repo layout
+
+This skill owns the **content** of a `.rego` policy file (package, rules, helpers, approval channels). It does NOT own **where in the repo** that file lives.
+
+If you are creating a policy from scratch as part of building a new Torque project — i.e. there is no existing repo layout to follow — **invoke the `torque-repo-conventions` skill FIRST** to lock in the canonical location (`policies/<policy-name>.rego` at repo root, flat — one file per policy), then return here for the policy's content.
+
+---
+
 ## Step 1 — Fetch Live Documentation
 
 **Always fetch fresh documentation before writing any policy.**
