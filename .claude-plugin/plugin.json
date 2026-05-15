@@ -1,9 +1,10 @@
 {
   "name": "quali-claude-plugin",
-  "version": "0.1.1",
-  "description": "Torque DevOps toolkit — blueprint authoring, environment management, and infrastructure automation (Terraform, Ansible, Kubernetes, AWS) powered by the Torque MCP.",
+  "version": "0.1.3",
+  "description": "Torque DevOps toolkit — blueprint authoring, environment management, and infrastructure automation (Terraform, Ansible, Kubernetes, AWS). Talks to Torque via its REST API (no MCP server required).",
   "author": {
-    "name": "Quali"
+    "name": "Quali",
+    "url": "https://www.quali.com/"
   },
   "keywords": ["devops", "torque", "aws", "kubernetes", "ansible", "terraform", "infrastructure", "iac"]
 }

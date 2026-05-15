@@ -12,8 +12,10 @@ description: >
   "check this YAML", "is this blueprint correct", "what's wrong with this blueprint",
   "improve this blueprint", "best practices for my blueprint", "does this look right",
   or "any issues here" in a Torque context. Also trigger when users paste or upload
-  a blueprint and ask for feedback. Complements validate_blueprint_yaml MCP tool
-  with higher-level design, security, and usability checks.
+  a blueprint and ask for feedback. Complements the server-side blueprint validation
+  endpoint (`POST /spaces/{space}/validations/blueprints`, wrapped by
+  `skills/torque-api/scripts/examples/validate_blueprint.py`) with higher-level
+  design, security, and usability checks.
 ---
 
 # Torque Blueprint Reviewer
@@ -28,8 +30,14 @@ can act on immediately.
 
 The user may:
 - **Paste it inline** or upload a `.yaml` file — use it directly.
-- **Reference a blueprint by name** — ask for space name, repository name, and branch,
-  then fetch it with `TorqueMCP:get_blueprint_yaml`.
+- **Reference a blueprint by name** — ask for space name, blueprint name, and (for external repos) repo + branch, then fetch:
+  ```bash
+  python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_blueprint_yaml.py" \
+    --space <SPACE> --name <BP>            # qtorque built-in repo
+  # or, for external repos:
+  python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_blueprint_yaml.py" \
+    --space <SPACE> --name <BP> --repo <REPO> --branch <BRANCH>
+  ```
 - **Ask you to review "my blueprint"** without providing it — ask them to share it.
 
 Once you have the YAML, proceed to Step 2.
@@ -79,11 +87,14 @@ Classify each finding into one of three severity levels:
 
 ## Step 4 — Optionally Validate with Torque
 
-If the user has provided a space name (or you can infer it), call
-`TorqueMCP:validate_blueprint_yaml` to catch schema-level errors the structural
-review might miss. To use it, base64-encode the YAML and pass it along with the
-blueprint name and space name. Include any validation errors in your report under a
-separate **Schema Validation** heading.
+If the user has provided a space name (or you can infer it), run the server-side validator to catch schema-level errors the structural review might miss:
+
+```bash
+python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/validate_blueprint.py" \
+  --space <SPACE> --name <BP> --file <PATH_TO_YAML>
+```
+
+The script base64-encodes the YAML for you and prints `{is_valid, errors, warnings}` as JSON (exit code 1 if invalid). Include any errors in your report under a separate **Schema Validation** heading.
 
 ---
 
@@ -149,4 +160,4 @@ still offer optional polish suggestions.
 - **Partial blueprints / snippets** — Review what's visible. Note which checks couldn't
   run due to missing context.
 - **Blueprint grain (nested)** — Verify that inner blueprint inputs/outputs are wired
-  correctly and that the nested blueprint exists (if you can check via MCP).
+  correctly and that the nested blueprint exists (use `get_blueprint_yaml.py` if you can).

@@ -35,11 +35,17 @@ If unclear, ask before proceeding.
 
 ### For a running environment
 
-Use the Torque MCP / REST API to fetch:
-- Environment grains and their kinds (terraform, helm, kubernetes, ...).
-- Grain outputs and resource counts (instance counts, disk sizes, replicas).
-- Tags and labels (for cost allocation).
-- Duration so far + scheduled end time.
+Fetch full env details:
+```bash
+python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_environment.py" \
+  --space <SPACE> --id <ENV_ID>
+```
+From the parsed JSON extract:
+- `grains[]` — kind, status, inputs, outputs (for resource counts: instance counts, disk sizes, replicas).
+- `labels` — for cost allocation.
+- `start_time`, `end_time` — duration so far and scheduled end.
+
+For a blueprint (not yet launched), fetch its YAML with `get_blueprint_yaml.py` and parse declared grain inputs / defaults instead.
 
 ### For a blueprint YAML
 

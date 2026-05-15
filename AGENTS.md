@@ -8,17 +8,17 @@ A [Claude Code plugin](https://docs.claude.com/claude-code) for [Quali Torque](h
 
 - **Knowledge skills** (`skills/torque-*`, `skills/aws-*`, `skills/k8s-*`) — auto-triggered by Claude based on the user's intent, matched against each skill's `description`.
 - **User-invocable skills** (`skills/command-*`) — slash-invocable (e.g. `/launch-env`). Same SKILL.md format as knowledge skills; the prefix is a convention, not a runtime requirement. (As of early 2026 Claude Code unified `commands/` into the skills system.)
-- **MCP server** (`.mcp.json`) — the Torque MCP, providing live access to blueprints, environments, workflows, and policies.
+- **Torque API integration** (`skills/torque-api/`) — shared Python helper (`torque_api.py`, stdlib only) + per-endpoint example scripts + reference docs. All other skills make Torque REST calls through these scripts; the helper handles auth (`TORQUE_API_TOKEN`), host (`TORQUE_API_HOST`, default `portal.qtorque.io`), and typed error mapping.
 
 ## Repository layout
 
 ```
 .
 ├── .claude-plugin/plugin.json   # plugin manifest (name, version, author)
-├── .mcp.json                    # MCP server registration (TorqueMCP)
 ├── .github/ISSUE_TEMPLATE/      # GitHub issue templates
 ├── assets/icon.png              # marketplace icon (placeholder)
 └── skills/                      # unified skills directory
+    ├── torque-api/              # shared Torque REST helper + example scripts + references
     ├── command-*/SKILL.md       # user-invocable (slash) skills
     └── <other>/SKILL.md         # auto-triggered knowledge skills
 ```
@@ -41,10 +41,12 @@ A [Claude Code plugin](https://docs.claude.com/claude-code) for [Quali Torque](h
 - When a command needs domain knowledge (e.g., blueprint structure), it should explicitly say "invoke the X skill" rather than re-implementing the knowledge.
 - Reference plugin files via `${CLAUDE_PLUGIN_ROOT}/skills/<skill>/SKILL.md`.
 
-### MCP
+### Torque API access
 
-- The Torque MCP server is wired in `.mcp.json`. It reads `TORQUE_API_TOKEN` from the user's environment — never commit a token.
-- The MCP exposes 12 tools (see `README.md`). When a command can use an MCP tool, prefer that over teaching Claude to make raw HTTP calls.
+- Every Torque REST call goes through `skills/torque-api/scripts/torque_api.py` (helper, stdlib only) or one of the per-endpoint example scripts in `skills/torque-api/scripts/examples/`. **No skill calls `curl` or `urllib` directly.**
+- Auth: helper reads `TORQUE_API_TOKEN` from env. Host: `TORQUE_API_HOST` (default `portal.qtorque.io`). Never commit a token.
+- Endpoint table, response shapes, and error mapping live in `skills/torque-api/references/`.
+- Adding a new Torque API operation = three mechanical steps (row in `endpoints.md`, new example script, reference from consuming skill). Recipe in `skills/torque-api/SKILL.md`.
 
 ## When making changes
 
@@ -69,9 +71,9 @@ A [Claude Code plugin](https://docs.claude.com/claude-code) for [Quali Torque](h
 
 ### Avoid
 
-- **Never** commit a `TORQUE_API_TOKEN` value to `.mcp.json` or any file.
+- **Never** commit a `TORQUE_API_TOKEN` value to any file.
 - **Don't** copy generic LLM advice into a `torque-*` skill — those skills are about Torque specifics. Generic guidance belongs in `aws-best-practices` / `k8s-operations` / a new generic skill.
-- **Don't** duplicate MCP tool functionality in a markdown command. If a tool exists, call it.
+- **Don't** make raw HTTP calls (`curl`, `urllib`, `requests`) from skills. Use `skills/torque-api/scripts/` so auth, host, and error semantics stay centralized. If the endpoint isn't wrapped yet, add a small example script there first.
 - **Don't** add `.DS_Store`, IDE files, or local caches — `.gitignore` excludes them; keep it that way.
 
 ## Testing

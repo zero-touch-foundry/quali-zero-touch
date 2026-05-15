@@ -34,7 +34,7 @@ body:
       options:
         - Skill (specify which one in the description)
         - Slash command (specify which one in the description)
-        - TorqueMCP server
+        - torque-api helper / example script
         - Plugin install / load
         - Documentation
         - Other
@@ -73,11 +73,11 @@ body:
     id: environment
     attributes:
       label: Environment
-      description: OS, shell, Node version (for MCP), Torque account region.
+      description: OS, shell, Python version (`python --version`), Torque account region.
       placeholder: |
         - OS: macOS 14.5
         - Shell: zsh 5.9
-        - Node: v20.10.0
+        - Python: 3.11.6
         - Torque region: us-east-1
     validations:
       required: true
@@ -86,5 +86,5 @@ body:
     id: logs
     attributes:
       label: Logs / output
-      description: Redacted Claude Code transcript or MCP error output. **Do NOT include your TORQUE_API_TOKEN.**
+      description: Redacted Claude Code transcript or script error output. **Do NOT include your TORQUE_API_TOKEN.**
       render: shell

@@ -31,17 +31,26 @@ These ship as skills under `skills/command-*/` and can be invoked directly with 
 | `/env-status [name]` | Check a Torque environment's health and grain states. |
 | `/launch-env [blueprint]` | Launch a new environment from a blueprint, interactively gathering inputs. |
 | `/new-blueprint [name]` | Scaffold a new Torque blueprint with the `torque-blueprint` skill. |
-| `/deploy-check [file]` | Pre-deployment validation — server-side via `validate_blueprint_yaml` MCP tool + design review via `torque-blueprint-reviewer`. |
+| `/deploy-check [file]` | Pre-deployment validation — server-side blueprint validation (`POST /spaces/{space}/validations/blueprints`) + design review via `torque-blueprint-reviewer`. |
 | `/run-workflow [env] [workflow]` | Run a Torque day-2 workflow on an environment, with input prompting and confirmation. |
 | `/catalog [filter]` | List published blueprints (catalog items) available to launch in the current space. |
 | `/torque-quickstart` | First-time user walkthrough — auth check, space selection, first launch or first blueprint. |
 | `/blueprint-from-asset [path]` | Scaffold a Torque blueprint from an existing IaC asset (Terraform, OpenTofu, Helm, Ansible, K8s, CloudFormation, Terragrunt). Auto-detects type. |
 
-### MCP server
+### Torque API integration
 
-| Server | Purpose |
-|--------|---------|
-| **TorqueMCP** | Torque API access — blueprints, environments, workflows, validation, launch operations. |
+The plugin talks to Torque via its REST API. A shared **`torque-api`** skill at `skills/torque-api/` centralizes the Python helper (`torque_api.py`, stdlib only), per-endpoint example scripts, and endpoint/response/error references. All other skills call those scripts — no skill makes raw HTTP calls.
+
+Currently wrapped endpoints (one example script each):
+
+- list spaces, blueprints, catalog, environments, workflow instantiations
+- get blueprint YAML (qtorque built-in or external repo)
+- validate blueprint YAML (server-side)
+- launch environment (from registered blueprint or standalone YAML)
+- run day-2 workflow
+- find grain usage examples across blueprints
+
+To extend with a new Torque API operation, see `skills/torque-api/SKILL.md` — the extension recipe is mechanical (add a row to `endpoints.md`, drop an example script, reference it from the consuming skill).
 
 ## Installation
 
@@ -49,30 +58,28 @@ These ship as skills under `skills/command-*/` and can be invoked directly with 
 
 - [Claude Code](https://docs.claude.com/claude-code) installed
 - A Torque account with API access — token obtained from the Torque portal (see below)
-
-No Node.js / `npx` required — the MCP server uses Claude Code's built-in HTTP transport.
+- Python 3.8+ on `PATH` (helper scripts are stdlib only — no `pip install` needed)
 
 ### Step 1 — Get a Torque API token
 
-1. Sign in to the Torque portal at the URL for your account (SaaS: `https://portal.qtorque.io`; dedicated/on-prem: your tenant URL).
-2. Open **My Account → Personal API Tokens** (or **Space Settings → Integrations → API Tokens** for a space-scoped token).
-3. Click **Generate Token**, copy the value. **Save it now** — the portal will not show it again.
+1. Sign in to the Torque portal at the URL for your account.
+2. Open the **My Token** page:
+   - SaaS: <https://portal.qtorque.io/my-token>
+   - Dedicated / on-prem: `https://<your-tenant-host>/my-token`
+3. Copy the token shown on that page. **Save it now** — the portal will not show it again.
 
-For details and token scope guidance, see the [Torque API docs](https://docs.qtorque.io/api).
+For space-scoped tokens or token-scope guidance, see **Space Settings → Integrations → API Tokens** in the portal, or the [Torque API docs](https://docs.qtorque.io/api).
 
 ### Step 2 — Set the token before launching Claude Code
 
-The TorqueMCP server reads `TORQUE_API_TOKEN` from your environment at session start. Pick one option:
+The helper scripts read `TORQUE_API_TOKEN` from your environment at call time. Pick one option:
 
-**Option A (recommended) — shell profile**
-
-Add to `~/.zshrc`, `~/.bash_profile`, or equivalent:
+**Option A (recommended) — `export` in the shell you launch Claude Code from**
 
 ```bash
 export TORQUE_API_TOKEN="paste-your-token-here"
+claude
 ```
-
-Restart your terminal, then run `claude`.
 
 **Option B — per-session**
 
@@ -80,21 +87,25 @@ Restart your terminal, then run `claude`.
 TORQUE_API_TOKEN="paste-your-token-here" claude
 ```
 
-**Option C — `.env` loader**
+**Option C — persistent in a shell profile**
 
-If you use [direnv](https://direnv.net/) or similar, add `export TORQUE_API_TOKEN=...` to `.envrc` for the project. Do **not** commit `.envrc`.
+If you want it to persist across reboots, add `export TORQUE_API_TOKEN="..."` to `~/.zshrc`, `~/.bash_profile`, or (for GUI-app inheritance on macOS) `~/.zshenv`. Restart your terminal.
 
-> ⚠️ Never commit the token to `.mcp.json`, `.envrc`, dotfiles, or any file pushed to a repo. The `${TORQUE_API_TOKEN}` placeholder in `.mcp.json` is resolved at runtime from your environment.
+**Option D — `.env` loader**
 
-### Step 3 (on-prem / dedicated only) — Override the Torque URL
+If you use [direnv](https://direnv.net/) or similar, add `export TORQUE_API_TOKEN=...` to `.envrc`. Do **not** commit `.envrc`.
+
+> ⚠️ Never commit the token to any file pushed to a repo.
+
+### Step 3 (on-prem / dedicated only) — Override the Torque host
 
 SaaS users skip this. If your Torque is a dedicated or self-hosted instance, also set:
 
 ```bash
-export TORQUE_MCP_URL="https://torque.acme.internal/mcp"
+export TORQUE_API_HOST="torque.acme.internal"
 ```
 
-The default is `https://portal.qtorque.io/mcp`.
+Hostname only — no `https://`, no path. The default is `portal.qtorque.io`.
 
 ### Step 4 — Verify
 
@@ -130,7 +141,7 @@ claude --plugin-dir dist/quali-claude-plugin-0.1.0.zip
 
 **Option 3 — persistent via a local marketplace**
 
-See the marketplace setup snippets in the [Claude Desktop install section](#install-in-claude-desktop-code--cowork-tabs) — the same marketplace folder works for the CLI:
+See the [Claude Desktop install section](#install-in-claude-desktop) for marketplace mechanics:
 
 ```bash
 /plugin marketplace add ~/quali-local
@@ -139,104 +150,51 @@ See the marketplace setup snippets in the [Claude Desktop install section](#inst
 
 (Marketplace installation instructions for the public Anthropic marketplace will be added when published.)
 
-### Install in Claude Desktop (Code / Cowork tabs)
+### Install in Claude Desktop
 
-Claude Desktop's **Code** tab (and **Cowork** tab) host the full Claude Code runtime, so plugins, slash commands, skills, and `.mcp.json` MCP servers all work the same as the CLI. The **Chat** tab is conversation-only and does not run plugins.
+Claude Desktop's **Code** tab hosts the full Claude Code runtime — plugins, slash commands, and skills all work. The **Chat** tab is conversation-only and does not run plugins.
+
+> **Cowork tab note:** the Cowork tab only loads plugins from a **git-hosted marketplace** (GitHub owner/repo or git URL), not from a local path or zip. Until this plugin is published to a public GitHub repo, Cowork install is not available. The Code tab works today via zip upload (below).
 
 **Step 1 — build a zip**
-
-From the plugin root:
 
 ```bash
 ./pack.sh
 ```
 
-Produces `dist/quali-claude-plugin-<version>.zip` with a clean top-level folder layout. Share that zip or use it for the next steps.
+Produces `dist/quali-claude-plugin-<version>.zip`.
 
-**Step 2 — install in Claude Desktop**
+**Step 2 — upload in the Code tab**
 
-Open Claude Desktop → **Code** tab → **+** button next to the prompt → **Plugins**. Two options:
+Open Claude Desktop → **Code** tab → **+** button next to the prompt → **Plugins** → **Add plugin** → select the zip. The plugin loads on next session restart.
 
-- **Upload zip** — point at the file produced by `pack.sh`. Simplest path.
-- **Add local marketplace** — for iterative dev. Create a marketplace folder once:
-
-  macOS / Linux:
-  ```bash
-  PLUGIN_PATH="/full/path/to/quali-claude-plugin"
-  mkdir -p ~/quali-local/.claude-plugin
-  cat > ~/quali-local/.claude-plugin/marketplace.json <<EOF
-  {
-    "name": "quali-local",
-    "plugins": [
-      { "name": "quali-claude-plugin", "source": "$PLUGIN_PATH" }
-    ]
-  }
-  EOF
-  ```
-
-  Windows (PowerShell):
-  ```powershell
-  $PluginPath = "C:\full\path\to\quali-claude-plugin"
-  $MarketDir  = "$HOME\quali-local\.claude-plugin"
-  New-Item -ItemType Directory -Force -Path $MarketDir | Out-Null
-  @"
-  {
-    "name": "quali-local",
-    "plugins": [
-      { "name": "quali-claude-plugin", "source": "$PluginPath" }
-    ]
-  }
-  "@ | Set-Content -Encoding UTF8 "$MarketDir\marketplace.json"
-  ```
-
-  Then in Claude Desktop's plugin UI, add the marketplace path (`~/quali-local` or `%USERPROFILE%\quali-local`) and install `quali-claude-plugin` from it.
+The repo also ships a `.claude-plugin/marketplace.json`, so once it's hosted on a public git remote you'll also be able to install via `/plugin marketplace add <owner>/<repo>` — both Code and Cowork. Until then, zip upload is the path.
 
 **Step 3 — set env vars**
 
 Claude Desktop reads env vars from the OS environment at app launch.
 
-- **macOS**: add `export TORQUE_API_TOKEN="..."` (and optional `export TORQUE_MCP_URL="..."`) to `~/.zshenv`. `.zshenv` loads for all zsh processes including those spawned by GUI apps; `.zshrc` loads only for interactive shells and is **not** read when launching Claude Desktop from Finder. Log out and back in, or restart, after editing.
+- **macOS**: add `export TORQUE_API_TOKEN="..."` (and optional `export TORQUE_API_HOST="..."`) to `~/.zshenv`. `.zshenv` loads for all zsh processes including those spawned by GUI apps; `.zshrc` loads only for interactive shells and is **not** read when launching Claude Desktop from Finder. Log out and back in, or restart, after editing.
 - **Linux**: same idea — use `~/.profile` (loaded at login) rather than `~/.bashrc` (interactive-only). Log out and back in.
-- **Windows**: open **Settings → System → About → Advanced system settings → Environment Variables**. Add `TORQUE_API_TOKEN` (and optional `TORQUE_MCP_URL`) under **User variables**. Click OK, then fully quit Claude Desktop (right-click tray icon → **Quit**, not just closing the window) and reopen it.
+- **Windows**: open **Settings → System → About → Advanced system settings → Environment Variables**. Add `TORQUE_API_TOKEN` (and optional `TORQUE_API_HOST`) under **User variables**. Click OK, then fully quit Claude Desktop (right-click tray icon → **Quit**, not just closing the window) and reopen it.
 
 **Step 4 — verify**
 
-In the Code tab, type `/torque-quickstart`. It checks the env var, surfaces fix-it instructions if missing, then calls `get_spaces` to confirm end-to-end auth.
-
-**Chat tab — MCP only, no plugin**
-
-The Chat tab does not run plugins, but you can still register the Torque MCP server there for the 12 Torque tools (no slash commands, no skills). Edit Claude Desktop's MCP config:
-
-- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-- Linux: `~/.config/Claude/claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "TorqueMCP": {
-      "type": "http",
-      "url": "https://portal.qtorque.io/mcp",
-      "headers": {
-        "Authorization": "Bearer PASTE_YOUR_TOKEN_HERE"
-      }
-    }
-  }
-}
-```
-
-Restart Claude Desktop. Replace the URL for on-prem / dedicated tenants.
+In the Code tab, type `/torque-quickstart`. It checks the env var, surfaces fix-it instructions if missing, then runs `get_spaces.py` to confirm end-to-end auth.
 
 ## Troubleshooting
 
+Full error reference: `skills/torque-api/references/errors.md`.
+
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Claude Code logs "MCP server `TorqueMCP` failed to start" or "config parse error" | `TORQUE_API_TOKEN` env var is unset | Set it (see [Authentication](#step-2--set-the-token-before-launching-claude-code)) and restart Claude Code. Claude Code fails silently at config-parse time when required env vars are missing without defaults. |
-| MCP tools return `401 Unauthorized` | Token invalid, expired, or wrong account | Regenerate at the Torque portal. Confirm you copied it without leading/trailing whitespace. |
-| MCP tools return `403 Forbidden` on specific tools | Token is space-scoped but tool is account-wide (or vice versa) | Use a personal API token, or scope your space token to the correct space. |
-| MCP tools time out / `connection refused` | Wrong `TORQUE_MCP_URL` for an on-prem/dedicated instance | Confirm the URL with your Torque admin. Must include the `/mcp` suffix. |
+| Script error: `TORQUE_API_TOKEN env var is not set` | Env var unset in the shell that launched Claude Code | `export TORQUE_API_TOKEN="..."` and restart Claude Code so the new env is inherited. |
+| `ERROR HTTP 401` | Token invalid, expired, or wrong account | Regenerate at the Torque portal. Confirm no leading/trailing whitespace. |
+| `ERROR HTTP 403` | Token scope mismatch (space-scoped vs account-wide) | Use a personal API token, or scope your space token to the correct space. |
+| `ERROR HTTP 0` / connection refused / timeout | Wrong `TORQUE_API_HOST` for an on-prem/dedicated tenant, or VPN/proxy issue | `export TORQUE_API_HOST="<tenant-host>"` (hostname only). Verify VPN / proxy. |
 | `/launch-env` shows no blueprints | Token scoped to a space without published blueprints | Run `/catalog` against another space, or check **Catalog** in the portal. |
-| Tool list is empty / Claude doesn't see Torque tools | Plugin not loaded, or MCP entry didn't load | `claude plugin list` to verify the plugin is installed. Check `~/.claude.json` or session logs for parse errors. |
+| `python: command not found` | Python 3.8+ not on PATH | Install Python 3 or expose `python3` as `python`. |
+| Plugin not visible / Claude doesn't see Torque skills | Plugin not loaded | `claude plugin list` to verify install. Check `~/.claude.json` or session logs for parse errors. |
 
 ## Usage examples
 
@@ -269,12 +227,15 @@ or, naturally:
 ```
 .
 ├── .claude-plugin/plugin.json   # plugin manifest
-├── .mcp.json                    # TorqueMCP server config
 ├── .github/ISSUE_TEMPLATE/      # bug + feature request templates
 ├── assets/icon.png              # marketplace icon (placeholder)
 ├── AGENTS.md                    # orientation for AI coding agents working on this repo
 └── skills/                      # unified skills directory
-    ├── command-*/               # user-invocable skills (slash-style: /env-status, /launch-env, ...)
+    ├── torque-api/              # shared API helper (Python, stdlib) + endpoint reference
+    │   ├── scripts/torque_api.py
+    │   ├── scripts/examples/*.py
+    │   └── references/*.md
+    ├── command-*/               # user-invocable skills (/env-status, /launch-env, ...)
     └── torque-*, aws-*, k8s-*   # knowledge skills (auto-triggered by description)
 ```
 

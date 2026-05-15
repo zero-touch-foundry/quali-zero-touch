@@ -20,6 +20,14 @@ description: >
 Live Swagger spec (always fetch to check for new endpoints):
 `https://portal.qtorque.io/swagger/latest/swagger.yaml`
 
+**All HTTP calls go through the shared helper** at `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py` (and its example scripts). The helper handles auth (`TORQUE_API_TOKEN`), host resolution (`TORQUE_API_HOST`, default `portal.qtorque.io`), and typed error mapping. Do NOT call `curl` or `urllib` directly. See `skills/torque-api/SKILL.md` for usage.
+
+For one-off calls to endpoints not yet wrapped as example scripts:
+```bash
+python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" \
+  GET "/settings/environmentfeed?sandbox_id=<env_id>"
+```
+
 ---
 
 ## Step 1 — Collect Connection Details
@@ -34,26 +42,23 @@ Extract: **hostname**, **space_name**, **environment_id**.
 
 ### Manual fallback
 Ask the user for:
-- **API token** — generated at: Help → Community Integrations → any CI tool → Configure → Generate New Token, or using the API documentation page at https://portal.qtorque.io/api_reference
+- **API token** — must be exported as `TORQUE_API_TOKEN` in the shell before running scripts. Generated at: Help → Community Integrations → any CI tool → Configure → Generate New Token, or via https://portal.qtorque.io/api_reference.
 - **Space name**
 - **Environment ID**
+- For self-hosted / dedicated tenants: `TORQUE_API_HOST` env var must point to the hostname.
 
-All API calls use:
-```
-Authorization: Bearer <token>
-Content-Type: application/json
-```
+Auth + content-type are handled by the helper; you don't set them per call.
 
 ---
 
 ## Step 2 — Fetch Environment Details
 
 ### Call A — Get environment details (primary)
+```bash
+python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_environment.py" \
+  --space <space_name> --id <environment_id>
 ```
-GET https://{hostname}/api/spaces/{space_name}/environments/{environment_id}
-```
-Returns: `EnvironmentResponse` — the single most important call. Contains overall status, blueprint
-name, all grain statuses, grain errors, outputs, inputs used.
+Endpoint: `GET /api/spaces/{space_name}/environments/{environment_id}`. The single most important call. Returns overall status, blueprint name, all grain statuses, grain errors, outputs, inputs used.
 
 **Key fields to extract from the response:**
 - `status` — overall environment status string (e.g. `Launching`, `Active`, `Deployment_Failed`, `Terminated`)
@@ -67,27 +72,27 @@ name, all grain statuses, grain errors, outputs, inputs used.
   - `depends_on` / `depends-on` — dependency chain
 
 ### Call B — Get activity feed log (secondary, very useful)
+```bash
+python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" \
+  GET "/settings/environmentfeed?sandbox_id=<environment_id>"
 ```
-GET https://{hostname}/api/settings/environmentfeed?sandbox_id={environment_id}
-```
-Returns: array of `EnvironmentFeedResponse` — this is exactly what the Torque UI shows in the
-environment's activity/event feed. Contains timestamped events, grain-level log messages, and
-error details that may be richer than the grain `errors[]` field alone.
+Returns array of `EnvironmentFeedResponse` — exactly what the Torque UI shows in the activity/event feed. Contains timestamped events, grain-level log messages, and error details often richer than the grain `errors[]` field alone.
 
-**This endpoint is account-scoped (not space-scoped) and takes `sandbox_id` as a query param.**
+**Account-scoped (not space-scoped), `sandbox_id` as a query param.**
 
 ### Call C — Get runner info (if agent/runner issues are suspected)
-```
-GET https://{hostname}/api/spaces/{space_name}/environments/runner/{environment_id}
+```bash
+python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" \
+  GET "/spaces/<space_name>/environments/runner/<environment_id>"
 ```
 Returns runner pod and agent information. Useful when the error points to the compute layer.
 
 ### Call D — List agents in space (if agent-not-found errors appear)
+```bash
+python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" \
+  GET "/spaces/<space_name>/agents"
 ```
-GET https://{hostname}/api/spaces/{space_name}/agents
-```
-Returns all agents associated with the space — confirms whether the agent referenced in the
-blueprint actually exists and is available.
+Returns all agents associated with the space — confirms whether the agent referenced in the blueprint actually exists and is available.
 
 ---
 
@@ -242,9 +247,10 @@ Numbered, specific, actionable steps to resolve the issue. Include:
 - Whether to retry the environment or make changes first
 
 To retry a grain after fixing without restarting the whole environment:
-```
-POST https://{hostname}/api/spaces/{space_name}/environments/{environment_id}/reconcile
-Body: { "grains": [{ "id": "<grain_name>" }] }
+```bash
+python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" \
+  POST "/spaces/<space_name>/environments/<environment_id>/reconcile" \
+  --body '{"grains":[{"id":"<grain_name>"}]}'
 ```
 
 ### 💡 Prevention (if relevant)
@@ -254,12 +260,15 @@ Brief tips to avoid recurrence.
 
 ## Step 6 — Handling API Errors
 
+The helper script prints `ERROR HTTP <code>` to stderr on failures. Map them with this table; full reference in `skills/torque-api/references/errors.md`.
+
 | HTTP code | Meaning | Action |
 |---|---|---|
-| `401` | Token invalid or expired | Generate a new long token at Space → Settings → Integrations → Generate New Token |
+| `401` | Token invalid or expired | Generate a new long token at Space → Settings → Integrations → Generate New Token. Re-export `TORQUE_API_TOKEN`. |
 | `403` | Token lacks access to this space | User needs at least Viewer role in the space |
 | `404` on environment | Wrong ID or space name, or environment already terminated | Double-check URL; confirm env still exists in the UI |
 | `424` | Cloud account not accessible | The cloud credential linked to the space is broken; check Space → Cloud Accounts |
+| `0` (network) | DNS / TLS / connection refused | Check `TORQUE_API_HOST`; VPN / proxy issues |
 
 If **no `errors[]`** are populated but the environment has failed status, the activity feed (Call B)
 will usually have the details. Parse the feed entries chronologically and look for events with
@@ -286,12 +295,14 @@ If **API access is unavailable entirely**, ask the user to:
 
 ## Useful Related Endpoints
 
+All callable via the helper CLI (`torque_api.py METHOD PATH [--body JSON]`):
+
 | Action | Endpoint |
 |---|---|
-| Retry (reconcile) a failed grain | `POST /api/spaces/{space}/environments/{env_id}/reconcile` |
-| Restart a grain with updated IaC | `POST /api/spaces/{space}/environments/{env_id}/update_v2` |
-| Force-terminate a stuck environment | `DELETE /api/spaces/{space}/environments/force/{env_id}` |
-| Validate a blueprint before launch | `POST /api/spaces/{space}/validations/blueprints` |
-| List agents available in space | `GET /api/spaces/{space}/agents` |
-| Export the live environment YAML | `GET /api/spaces/{space}/environments/{env_id}/eac` |
-| Get environment list for a space | `GET /api/spaces/{space}/environments` (via operation hub: `GET /api/operation_hub`) |
+| Retry (reconcile) a failed grain | `POST /spaces/{space}/environments/{env_id}/reconcile` |
+| Restart a grain with updated IaC | `POST /spaces/{space}/environments/{env_id}/update_v2` |
+| Force-terminate a stuck environment | `DELETE /spaces/{space}/environments/force/{env_id}` |
+| Validate a blueprint before launch | `POST /spaces/{space}/validations/blueprints` (use `validate_blueprint.py`) |
+| List agents available in space | `GET /spaces/{space}/agents` |
+| Export the live environment YAML | `GET /spaces/{space}/environments/{env_id}/eac` |
+| Get environment list for a space | `GET /spaces/{space}/environments` (use `get_environments.py`) |

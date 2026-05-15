@@ -57,7 +57,6 @@ mkdir -p "$STAGE_PLUGIN"
 # never local dev files, secrets, or build output.
 INCLUDE=(
   ".claude-plugin"
-  ".mcp.json"
   "skills"
   "assets"
   "AGENTS.md"

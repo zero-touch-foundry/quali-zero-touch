@@ -6,14 +6,36 @@ argument-hint: [blueprint-name]
 
 Launch a new Torque environment from the blueprint "$ARGUMENTS".
 
-1. Use `get_current_torque_space` to determine the active space.
-2. If no blueprint name was provided, use the Torque MCP to list available blueprints and ask the user to choose one.
-3. Use the Torque MCP to retrieve the blueprint's input definitions so you know what parameters are needed.
-4. If the blueprint has required inputs, ask the user to provide values for any that don't have defaults. Present the inputs clearly with their descriptions and current defaults.
+All API calls use scripts under `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/`. Response shapes in `skills/torque-api/references/response_shapes.md`.
+
+1. Determine the active space. If unknown:
+   ```bash
+   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_spaces.py" --names-only
+   ```
+   Ask the user to pick.
+2. If no blueprint name was provided, list catalog items:
+   ```bash
+   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_catalog.py" --space <SPACE>
+   ```
+   Ask the user to choose one.
+3. Fetch the blueprint YAML to read its input definitions:
+   ```bash
+   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_blueprint_yaml.py" --space <SPACE> --name <BLUEPRINT>
+   ```
+   Parse the `inputs:` block to find required inputs and defaults.
+4. For any required input without a default, ask the user. Present each input with its description and default.
 5. Confirm the launch details with the user before proceeding:
    - Blueprint name
-   - Environment name (ask the user if not specified)
+   - Environment name (ask if not specified)
    - Input values being used
-6. Use the Torque MCP to launch the environment with the confirmed inputs.
-7. Report the environment ID and initial status once launched.
-8. Offer to run `/env-status` to monitor the deployment progress.
+   - Duration (default ask: `PT2H`)
+6. Launch:
+   ```bash
+   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/launch_env.py" \
+     --space <SPACE> --name <ENV_NAME> \
+     --from-registered <REPO>/<BLUEPRINT> \
+     --inputs '<JSON>' --duration <ISO8601>
+   ```
+   Script prints the new environment id on stdout.
+7. Report the environment id and initial status. Initial status is usually `Launching`; full state requires a follow-up call.
+8. Offer to run `/env-status` (which uses `get_environment.py`) to monitor deployment progress.

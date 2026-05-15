@@ -22,4 +22,11 @@ Walk through these steps interactively:
    - Outputs with `quick: true` for important values
 6. Present the YAML for review and iterate based on feedback.
 
-If the Torque MCP is available, use `get_grain_usage_examples` to find real patterns from existing blueprints in the user's space.
+To ground the draft in real usage patterns from the user's space, scan existing blueprints for references to a given grain:
+
+```bash
+python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_grain_usage_examples.py" \
+  --space <SPACE> --grain <GRAIN_NAME>
+```
+
+Returns a JSON list of `{blueprint_name, snippet}` showing how other blueprints reference that grain's outputs. Use it as a hint, not a constraint.

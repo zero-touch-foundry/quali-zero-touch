@@ -17,7 +17,7 @@ body:
         - New slash command
         - Improvement to existing skill
         - Improvement to existing command
-        - New MCP tool (would require Torque MCP server changes)
+        - New Torque API endpoint wrapper (under skills/torque-api/scripts/examples/)
         - Documentation
         - Other
     validations:

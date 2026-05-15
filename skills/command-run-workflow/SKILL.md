@@ -6,18 +6,42 @@ argument-hint: [environment-name-or-id] [workflow-name]
 
 Run a Torque workflow on the environment "$1".
 
-1. **Resolve the environment** — if "$1" looks like an ID, use it directly. Otherwise use the Torque MCP `get_environments` tool to find an environment by name in the current space. If multiple matches or none, ask the user to clarify.
+All API calls use scripts under `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/`.
 
-2. **List available workflows** — use `get_workflows` to retrieve the workflows attached to this environment (or its blueprint scope). Present them as a numbered list with name + short description.
+1. **Resolve the environment** — if "$1" looks like an ID, use it directly. Otherwise list environments and find by name:
+   ```bash
+   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_environments.py" --space <SPACE> --name "$1"
+   ```
+   If multiple matches or none, ask the user to clarify.
+
+2. **List available workflows** in the space (workflows are blueprints with `sub_type=workflow`):
+   ```bash
+   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_blueprints.py" --space <SPACE> --sub-type workflow
+   ```
+   Present them as a numbered list with `name` + `description`.
 
 3. **Choose workflow** — if "$2" was provided, match it against the list. Otherwise ask the user to pick by number or name.
 
-4. **Gather inputs** — inspect the chosen workflow's input definitions. For any required input without a default, ask the user. Show defaults clearly. Mark sensitive inputs (don't echo values).
+4. **Gather inputs** — fetch the workflow blueprint YAML to read its input definitions:
+   ```bash
+   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_blueprint_yaml.py" --space <SPACE> --name <WORKFLOW_NAME>
+   ```
+   For any required input without a default, ask the user. Show defaults clearly. Mark sensitive inputs (don't echo values).
 
 5. **Confirm** — show a one-line summary before running: environment, workflow, inputs. Wait for explicit user confirmation (e.g. "yes" / "run it"). **Do not run automatically** — workflows can be destructive.
 
-6. **Run** — invoke `run_workflow` with the gathered inputs. Report the workflow execution ID and initial status.
+6. **Run**:
+   ```bash
+   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/run_workflow.py" \
+     --space <SPACE> --workflow <NAME> --target-env <ENV_ID> \
+     --inputs '<JSON_OBJECT>'
+   ```
+   Add `--target-grain <NAME>` if the workflow is scoped to a single grain (env_resource). Script prints the run id on stdout.
 
-7. **Follow-up** — offer to poll `get_instantiated_workflows` to monitor progress, or run `/env-status` after completion.
+7. **Follow-up** — offer to poll status:
+   ```bash
+   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_workflow_instantiations.py" --space <SPACE> --id <ENV_ID>
+   ```
+   Or run `/env-status` after completion.
 
 If no arguments are provided, list environments first, then workflows after one is chosen.

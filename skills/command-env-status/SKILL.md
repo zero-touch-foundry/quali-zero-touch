@@ -6,11 +6,19 @@ argument-hint: [environment-name]
 
 Check the health and status of the Torque environment "$ARGUMENTS".
 
-1. Use the Torque MCP to retrieve the environment's metadata: status, blueprint, grains, resources, and any active workflows.
-2. For each grain, report its current state (active, deploying, failed, etc.).
-3. If any grain is in a failed or degraded state, pull available logs or error details.
-4. If Kubernetes tools are available, check pod status and resource utilization for the environment's namespace.
-5. Summarize the overall health in a clear table: grain name, kind, status, and any issues.
-6. If there are problems, suggest specific next steps to investigate or resolve them.
+API calls use scripts under `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/`. Response shape in `skills/torque-api/references/response_shapes.md` (see "GET /spaces/{space}/environments/{env_id}").
 
-If no environment name is provided, use the Torque MCP to list available environments and ask the user which one to check.
+1. Resolve the env id. If "$ARGUMENTS" looks like a name, find it:
+   ```bash
+   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_environments.py" --space <SPACE> --name "$ARGUMENTS"
+   ```
+   If no name was provided, list all envs in the space and ask the user which to check.
+2. Fetch full details:
+   ```bash
+   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_environment.py" --space <SPACE> --id <ENV_ID>
+   ```
+3. From the parsed JSON: report top-level `status`, `blueprint_name`, and iterate `grains[]` — for each grain print `name`, `kind`, `status`, and any `errors[]`.
+4. If any grain is in a failed or degraded state (`Failed`, `Error`, `Deployment_Failed`, `Inactive`), surface its `errors[]` text verbatim. For deeper diagnosis, hand off to `torque-debug-env`.
+5. If Kubernetes tools are available, check pod status and resource utilization for the environment's namespace.
+6. Summarize the overall health in a table: grain name, kind, status, issues.
+7. If there are problems, suggest specific next steps to investigate or resolve them (or invoke `torque-debug-env` directly with the env URL).
