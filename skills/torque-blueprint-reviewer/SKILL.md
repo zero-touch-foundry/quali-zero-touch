@@ -24,6 +24,8 @@ You are reviewing a Torque (Quali) blueprint YAML file. Your job is to perform a
 structured, opinionated review and return actionable feedback the blueprint author
 can act on immediately.
 
+**Before running any Torque API helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.**
+
 ---
 
 ## Step 1 — Obtain the Blueprint

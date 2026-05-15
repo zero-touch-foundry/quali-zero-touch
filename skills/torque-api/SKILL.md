@@ -31,15 +31,17 @@ Every Torque-skill in this plugin calls Torque through these scripts. **No raw `
 
    If nothing's set, the `command-torque-quickstart` skill walks the user through setup (writes the config file with `--token-stdin` so the token never appears in transcript / shell history).
 
-2. Pick the right example script from the table in `references/endpoints.md`.
-3. Run it via Bash — no `export` needed; helper reads the config file:
+2. **Pick the right script from the "Script manifest" table below.** Do not guess script names from filename patterns — the manifest is authoritative.
+3. **Always run the chosen script with `--help` first** to see its exact arg names, defaults, and behavior. Skip this step and you will hallucinate flags that don't exist.
+4. Use server-side filter params (`--status`, `--name`, `--sub-type`, etc.) wherever the script offers them. Never fetch all records and filter the JSON yourself — server filters are faster, return less data, and avoid misclassifying ambiguous states.
+5. Run it via Bash — no `export` needed; helper reads the config file:
 
    ```bash
    python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_environments.py" --space my-space
    ```
 
-4. The script prints JSON to stdout on success and `ERROR HTTP <code>` + body to stderr on failure (non-zero exit code).
-5. Parse the JSON, use `references/response_shapes.md` to know which fields to surface, use `references/errors.md` to map error codes to user-facing fixes.
+6. The script prints JSON to stdout on success and `ERROR HTTP <code>` + body to stderr on failure (non-zero exit code).
+7. Parse the JSON, use `references/response_shapes.md` to know which fields to surface, use `references/errors.md` to map error codes to user-facing fixes.
 
 ## Direct helper usage (ad-hoc calls)
 
@@ -83,6 +85,30 @@ printf '%s' "$TOKEN" | ... torque_api.py configure --token-stdin --host tenant.e
 
 Skills writing the token should always use `--token-stdin` and pipe via `printf '%s' "<TOKEN>"` — never put the raw token in argv.
 
+## Script manifest
+
+Authoritative list of every example script + the operation it wraps. **This is the source of truth — do not guess filenames from patterns. Always check this table first, then run `--help` on the chosen script before invoking it.**
+
+| Operation | Script | Key args |
+|---|---|---|
+| List spaces | `get_spaces.py` | `[--names-only]` |
+| List blueprints in space | `get_blueprints.py` | `--space SPACE [--sub-type workflow]` |
+| Get blueprint YAML (qtorque built-in) | `get_blueprint_yaml.py` | `--space SPACE --name NAME` |
+| Get blueprint YAML (external repo) | `get_blueprint_yaml.py` | `--space SPACE --name NAME --repo REPO --branch BR` |
+| Validate blueprint YAML | `validate_blueprint.py` | `--space SPACE --name NAME (--file PATH \| --yaml STR)` |
+| List catalog items | `get_catalog.py` | `--space SPACE [--search S] [--only-favorites]` |
+| List environments in space | `get_environments.py` | `--space SPACE [--name FILTER] [--status STATUS]` |
+| Get environment details | `get_environment.py` | `--space SPACE --id ENV_ID` |
+| List instantiated workflows on env | `get_workflow_instantiations.py` | `--space SPACE --id ENV_ID` |
+| Launch env (registered blueprint) | `launch_env.py` | `--space S --name N --from-registered REPO/BP --inputs JSON [--duration ISO8601]` |
+| Launch env (standalone YAML) | `launch_env.py` | `--space S --name N --from-standalone PATH --inputs JSON [--duration ISO8601]` |
+| Run day-2 workflow | `run_workflow.py` | `--space S --workflow W --target-env ID [--target-grain G] [--inputs JSON]` |
+| Find grain usage examples | `get_grain_usage_examples.py` | `--space SPACE --grain NAME` |
+
+For server-side filtering, use the script's own filter args (`--name`, `--status`, `--sub-type`, etc.) rather than fetching all + filtering in Python. Server is faster, returns less data, avoids ambiguous-state misclassification.
+
+If the operation isn't in this table, it isn't wrapped yet — use the helper CLI directly (see "Direct helper usage" below) or write a new example script per the extension recipe.
+
 ## Files
 
 ```
@@ -90,18 +116,7 @@ skills/torque-api/
 ├── SKILL.md                          ← this file
 ├── scripts/
 │   ├── torque_api.py                 ← helper. CLI + importable (request, exceptions)
-│   └── examples/                     ← one file per endpoint, all ~20 lines
-│       ├── get_spaces.py
-│       ├── get_blueprints.py
-│       ├── get_blueprint_yaml.py
-│       ├── validate_blueprint.py
-│       ├── get_catalog.py
-│       ├── get_environments.py
-│       ├── get_environment.py
-│       ├── get_workflow_instantiations.py
-│       ├── launch_env.py
-│       ├── run_workflow.py
-│       └── get_grain_usage_examples.py
+│   └── examples/                     ← one file per endpoint (see manifest above)
 └── references/
     ├── endpoints.md                  ← URL table, body shapes for POSTs
     ├── response_shapes.md            ← truncated example responses, fields to parse
@@ -149,6 +164,15 @@ Format (INI-ish, no section header):
 token = eyJhbGciOi...
 host  = portal.qtorque.io
 ```
+
+## Silencing per-call permission prompts
+
+Claude Code prompts the user to approve each Bash invocation by default. The plugin ships a narrow allowlist at `${CLAUDE_PLUGIN_ROOT}/suggested-settings.json` covering helper + example scripts (token-write via `configure --token-stdin` is intentionally excluded). Two ways to apply it:
+
+- Run `/torque-quickstart` — Step 1c offers to merge the allowlist into the project's `.claude/settings.local.json`.
+- Manually copy the `permissions.allow` array from `suggested-settings.json` into `.claude/settings.local.json`.
+
+The plugin also ships `.claude-plugin/settings.json` with the same allowlist — Claude Code may honor it as a plugin-default someday, but this is undocumented; treat the project-level merge as the source of truth.
 
 ## What this skill does NOT do
 

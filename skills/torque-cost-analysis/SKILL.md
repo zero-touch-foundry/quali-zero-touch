@@ -17,6 +17,8 @@ description: >
 Estimate and optimize the cost of Torque environments and blueprints. Pair with `aws-best-practices` for
 cloud-side guidance and `torque-blueprint` for YAML-level changes.
 
+**Before running any Torque API helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.**
+
 ---
 
 ## Step 1 — Determine the target

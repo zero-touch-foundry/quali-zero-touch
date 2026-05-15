@@ -12,7 +12,7 @@ argument-hint: [filter]
 
 Show the Torque catalog — published blueprints the user can launch in the current space.
 
-API calls use the helper scripts under `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/`. Response shapes documented in `skills/torque-api/references/response_shapes.md`.
+**Before running any helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.** Response shapes are in `skills/torque-api/references/response_shapes.md`.
 
 1. If the active space is not known, run:
    ```bash

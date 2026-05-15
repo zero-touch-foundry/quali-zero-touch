@@ -6,7 +6,7 @@ argument-hint: [environment-name-or-id] [workflow-name]
 
 Run a Torque workflow on the environment "$1".
 
-All API calls use scripts under `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/`.
+**Before running any helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.**
 
 1. **Resolve the environment** — if "$1" looks like an ID, use it directly. Otherwise list environments and find by name:
    ```bash

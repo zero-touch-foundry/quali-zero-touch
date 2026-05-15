@@ -6,7 +6,7 @@ argument-hint: [environment-name]
 
 Check the health and status of the Torque environment "$ARGUMENTS".
 
-API calls use scripts under `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/`. Response shape in `skills/torque-api/references/response_shapes.md` (see "GET /spaces/{space}/environments/{env_id}").
+**Before running any helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.** Response shape in `skills/torque-api/references/response_shapes.md` (see "GET /spaces/{space}/environments/{env_id}").
 
 1. Resolve the env id. If "$ARGUMENTS" looks like a name, find it:
    ```bash

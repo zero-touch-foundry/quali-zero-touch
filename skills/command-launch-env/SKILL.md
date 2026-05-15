@@ -6,7 +6,7 @@ argument-hint: [blueprint-name]
 
 Launch a new Torque environment from the blueprint "$ARGUMENTS".
 
-All API calls use scripts under `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/`. Response shapes in `skills/torque-api/references/response_shapes.md`.
+**Before running any helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.** Response shapes in `skills/torque-api/references/response_shapes.md`.
 
 1. Determine the active space. If unknown:
    ```bash

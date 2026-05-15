@@ -6,6 +6,8 @@ argument-hint: [blueprint-file-path]
 
 Validate the blueprint at @$1 before deployment.
 
+**Before running any helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.**
+
 1. **Server-side validation** — run the authoritative schema check via the Torque REST API:
 
    ```bash

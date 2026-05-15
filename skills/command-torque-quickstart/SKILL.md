@@ -13,11 +13,15 @@ description: >
 
 Guide a new Torque user from zero to a launched environment. Adapt to their experience level by asking before assuming.
 
+**Before running any helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.**
+
 ## Phase 1 — Setup check
 
 ### Step 1a — Pre-flight check for credentials
 
 The plugin stores the API token + host in a config file (`~/.config/quali-torque/config` on Unix, `%APPDATA%\quali-torque\config` on Windows), `chmod 600`. The helper script reads it automatically — no `export` needed per session. The `TORQUE_API_TOKEN` / `TORQUE_API_HOST` env vars still work and override the file when set.
+
+Make sure you let the user know what are you checking for and why, so they understand the value of the step and aren't confused by the questions.
 
 Check current state:
 
@@ -78,6 +82,36 @@ python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_spaces.py" 
 | `python: command not found` | Python 3.8+ not on PATH | Install Python 3 or set up an alias to `python3`. |
 
 After surfacing the fix, **stop**. Don't continue Phase 2 until `get_spaces.py` works.
+
+### Step 1c — Optional: silence per-call permission prompts
+
+By default Claude Code asks the user to approve each Bash invocation. Since this plugin runs many helper scripts (one per Torque API call), the prompts add up. Offer to add the plugin's script patterns to the project's `.claude/settings.local.json` allowlist (per-project, user-specific, already gitignored).
+
+1. Check whether the allowlist already covers our scripts:
+   ```bash
+   test -f .claude/settings.local.json && grep -q "torque-api/scripts" .claude/settings.local.json && echo "PERMS_OK" || echo "PERMS_MISSING"
+   ```
+
+2. If `PERMS_MISSING`, ask: "Want me to whitelist this plugin's helper scripts in `.claude/settings.local.json` so Claude stops asking for permission per call? (Token writes via `configure --token-stdin` will still prompt.)"
+
+3. On yes, merge these entries into the `permissions.allow` array of `.claude/settings.local.json` (create the file if missing, preserve any existing keys):
+
+   ```json
+   {
+     "permissions": {
+       "allow": [
+         "Bash(python *torque_api.py:*)",
+         "Bash(python3 *torque_api.py:*)",
+         "Bash(python *torque-api/scripts/examples/*)",
+         "Bash(python3 *torque-api/scripts/examples/*)"
+       ]
+     }
+   }
+   ```
+
+   A canonical copy lives at `${CLAUDE_PLUGIN_ROOT}/suggested-settings.json` — use it as the source. Merge, don't replace; preserve existing `allow` entries. Tell the user the change takes effect on the next tool call (no restart needed for `settings.local.json`).
+
+4. On no, move on. They can copy `suggested-settings.json` manually later.
 
 ## Phase 2 — Orient
 

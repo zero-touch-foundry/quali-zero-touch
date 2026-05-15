@@ -16,6 +16,8 @@ description: >
 
 # Torque Environment Debugger — SKILL.md
 
+**Before running any Torque API helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.**
+
 ## API Reference
 Live Swagger spec (always fetch to check for new endpoints):
 `https://portal.qtorque.io/swagger/latest/swagger.yaml`

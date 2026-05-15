@@ -113,7 +113,35 @@ Run `claude`, then in the session:
 /torque-quickstart
 ```
 
-The quickstart command verifies authentication, lists your spaces, and surfaces fix-it instructions if anything is wrong.
+The quickstart command verifies authentication, lists your spaces, surfaces fix-it instructions if anything is wrong, and offers to whitelist this plugin's helper scripts in `.claude/settings.local.json` so Claude stops prompting for permission on every API call (see [Permissions](#permissions) below).
+
+### Permissions
+
+The plugin runs Python helper scripts via Bash. By default Claude Code asks the user to approve each invocation, which gets noisy. Two paths to silence the prompts:
+
+1. **Via `/torque-quickstart`** (recommended) — Step 1c offers to merge the plugin's safe-by-design allowlist into your project's `.claude/settings.local.json`. Token writes (`configure --token-stdin`) are intentionally **not** allowlisted — credential changes stay human-in-the-loop.
+
+2. **Manually** — copy `suggested-settings.json` (shipped at the plugin root) into your project's `.claude/settings.local.json`:
+
+   ```bash
+   cat "$(claude plugin path quali-claude-plugin)/suggested-settings.json"
+   # then merge the permissions.allow array into .claude/settings.local.json
+   ```
+
+   The patterns are narrow — they match only files under `torque-api/scripts/` so other Python scripts still prompt:
+
+   ```json
+   "permissions": {
+     "allow": [
+       "Bash(python *torque_api.py:*)",
+       "Bash(python3 *torque_api.py:*)",
+       "Bash(python *torque-api/scripts/examples/*)",
+       "Bash(python3 *torque-api/scripts/examples/*)"
+     ]
+   }
+   ```
+
+`.claude/settings.local.json` is per-project and user-specific (already gitignored in this repo). For team-wide defaults, use `.claude/settings.json` instead.
 
 ### Install the plugin (Claude Code CLI)
 
