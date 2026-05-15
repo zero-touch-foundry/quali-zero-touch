@@ -61,6 +61,7 @@ INCLUDE=(
   "assets"
   "AGENTS.md"
   "README.md"
+  "suggested-settings.json"
 )
 
 for item in "${INCLUDE[@]}"; do
