@@ -6,8 +6,8 @@ This file orients AI coding agents (Claude Code, Cursor, Codex, Aider, etc.) wor
 
 A [Claude Code plugin](https://docs.claude.com/claude-code) for [Quali Torque](https://www.quali.com/torque/). It bundles:
 
-- **Skills** (`skills/`) — model-loaded knowledge files that activate based on user intent.
-- **Commands** (`commands/`) — slash commands the user can invoke directly.
+- **Knowledge skills** (`skills/torque-*`, `skills/aws-*`, `skills/k8s-*`) — auto-triggered by Claude based on the user's intent, matched against each skill's `description`.
+- **User-invocable skills** (`skills/command-*`) — slash-invocable (e.g. `/launch-env`). Same SKILL.md format as knowledge skills; the prefix is a convention, not a runtime requirement. (As of early 2026 Claude Code unified `commands/` into the skills system.)
 - **MCP server** (`.mcp.json`) — the Torque MCP, providing live access to blueprints, environments, workflows, and policies.
 
 ## Repository layout
@@ -18,8 +18,9 @@ A [Claude Code plugin](https://docs.claude.com/claude-code) for [Quali Torque](h
 ├── .mcp.json                    # MCP server registration (TorqueMCP)
 ├── .github/ISSUE_TEMPLATE/      # GitHub issue templates
 ├── assets/icon.png              # marketplace icon (placeholder)
-├── commands/                    # slash commands (*.md with frontmatter)
-└── skills/                      # skill folders, each with SKILL.md
+└── skills/                      # unified skills directory
+    ├── command-*/SKILL.md       # user-invocable (slash) skills
+    └── <other>/SKILL.md         # auto-triggered knowledge skills
 ```
 
 ## Conventions
@@ -35,7 +36,7 @@ A [Claude Code plugin](https://docs.claude.com/claude-code) for [Quali Torque](h
 
 ### Commands
 
-- Each command is a single `*.md` file under `commands/` with frontmatter (`description`, `argument-hint`).
+- User-invocable "commands" are skills under `skills/command-<name>/SKILL.md` with `name`, `description`, and `argument-hint` frontmatter. Default `user-invocable: true` is implicit; do not set it explicitly unless overriding.
 - Commands should be thin orchestration layers — defer technical knowledge to skills.
 - When a command needs domain knowledge (e.g., blueprint structure), it should explicitly say "invoke the X skill" rather than re-implementing the knowledge.
 - Reference plugin files via `${CLAUDE_PLUGIN_ROOT}/skills/<skill>/SKILL.md`.
@@ -57,8 +58,8 @@ A [Claude Code plugin](https://docs.claude.com/claude-code) for [Quali Torque](h
 
 ### Adding a new command
 
-1. Create `commands/<command-name>.md` with `description` + `argument-hint` frontmatter.
-2. Use `@$1`, `$ARGUMENTS` syntax for arguments.
+1. Create `skills/command-<name>/SKILL.md` with `name`, `description`, and `argument-hint` frontmatter.
+2. Use `@$1`, `$ARGUMENTS` syntax for arguments — unchanged from the old commands format.
 3. Add a row to the README's Commands table.
 
 ### Changing skill names

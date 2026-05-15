@@ -22,10 +22,12 @@ Claude Code plugin for [Quali Torque](https://www.quali.com/torque/) — environ
 | **aws-best-practices** | AWS architecture, IAM, cost optimization, security hardening — Well-Architected guidance tailored to Torque workloads. |
 | **k8s-operations** | Kubernetes troubleshooting, manifest authoring, cluster management — useful when investigating Torque Helm/K8s grains. |
 
-### Commands
+### Commands (user-invocable skills)
 
-| Command | Description |
-|---------|-------------|
+These ship as skills under `skills/command-*/` and can be invoked directly with `/` (slash) or by natural language matching their description. Per the early-2026 Claude Code change, slash commands and skills are now one unified system — no separate `commands/` directory.
+
+| Slash | Description |
+|-------|-------------|
 | `/env-status [name]` | Check a Torque environment's health and grain states. |
 | `/launch-env [blueprint]` | Launch a new environment from a blueprint, interactively gathering inputs. |
 | `/new-blueprint [name]` | Scaffold a new Torque blueprint with the `torque-blueprint` skill. |
@@ -271,8 +273,9 @@ or, naturally:
 ├── .github/ISSUE_TEMPLATE/      # bug + feature request templates
 ├── assets/icon.png              # marketplace icon (placeholder)
 ├── AGENTS.md                    # orientation for AI coding agents working on this repo
-├── commands/                    # slash commands (8)
-└── skills/                      # skills (11 total — Torque + AWS + k8s + cost analysis)
+└── skills/                      # unified skills directory
+    ├── command-*/               # user-invocable skills (slash-style: /env-status, /launch-env, ...)
+    └── torque-*, aws-*, k8s-*   # knowledge skills (auto-triggered by description)
 ```
 
 ## Contributing

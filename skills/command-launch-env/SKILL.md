@@ -1,4 +1,5 @@
 ---
+name: launch-env
 description: Launch a Torque environment from a blueprint
 argument-hint: [blueprint-name]
 ---

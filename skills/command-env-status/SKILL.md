@@ -1,4 +1,5 @@
 ---
+name: env-status
 description: Check a Torque environment's health and status
 argument-hint: [environment-name]
 ---

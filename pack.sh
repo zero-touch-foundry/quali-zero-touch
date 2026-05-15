@@ -58,7 +58,6 @@ mkdir -p "$STAGE_PLUGIN"
 INCLUDE=(
   ".claude-plugin"
   ".mcp.json"
-  "commands"
   "skills"
   "assets"
   "AGENTS.md"

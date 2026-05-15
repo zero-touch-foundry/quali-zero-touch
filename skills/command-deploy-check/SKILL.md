@@ -1,4 +1,5 @@
 ---
+name: deploy-check
 description: Pre-deployment validation for a Torque blueprint (server-side + design review)
 argument-hint: [blueprint-file-path]
 ---

@@ -1,4 +1,5 @@
 ---
+name: new-blueprint
 description: Scaffold a new Torque blueprint interactively
 argument-hint: [blueprint-name]
 ---

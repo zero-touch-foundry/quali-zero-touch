@@ -1,5 +1,16 @@
 ---
-description: Scaffold a Torque blueprint from an existing IaC asset (Terraform, OpenTofu, Helm, Ansible, K8s, CloudFormation, Terragrunt)
+name: blueprint-from-asset
+description: >
+  Scaffold a Torque blueprint from an existing IaC asset at a given path. Auto-detects asset
+  type (Terraform, OpenTofu, Helm chart, Kubernetes manifests, Ansible playbook, CloudFormation
+  template, AWS CDK, Terragrunt, shell scripts) and routes to the right grain kind.
+  Use this skill when the user asks "wrap my Terraform in a Torque blueprint",
+  "convert this Helm chart to Torque", "make a blueprint from my IaC", "Torque-ify this module",
+  "turn my Ansible playbook into a blueprint", "blueprint from terragrunt", "blueprint from my repo",
+  "scaffold a blueprint around my existing code", or invokes /blueprint-from-asset. Composes
+  multi-grain blueprints when a directory contains mixed asset types (e.g. Terraform infra +
+  Ansible config). Hands Terragrunt off to torque-terragrunt-migrate and Terraform / Ansible
+  through torque-ready-terraform / torque-ready-ansible for pre-flight refactor suggestions.
 argument-hint: [path-to-asset]
 ---
 

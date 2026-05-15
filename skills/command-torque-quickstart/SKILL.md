@@ -1,5 +1,13 @@
 ---
-description: First-time Torque user walkthrough — authenticate, explore catalog, launch first env, debug
+name: torque-quickstart
+description: >
+  First-time Torque user walkthrough — verifies authentication (TORQUE_API_TOKEN), picks a space,
+  and branches on intent (launch from catalog / author first blueprint / debug failing environment).
+  Use this skill when the user says "I'm new to Torque", "help me get started with Torque",
+  "Torque quickstart", "first time using Torque", "how do I set up Torque", "where do I begin with Torque",
+  "guide me through Torque", "Torque onboarding", or invokes /torque-quickstart. Also use when the
+  user has just installed the plugin and asks how to verify it works. Pre-checks the env var and
+  offers to append the export line to the right shell profile before calling any MCP tool.
 ---
 
 Guide a new Torque user from zero to a launched environment. Adapt to their experience level by asking before assuming.

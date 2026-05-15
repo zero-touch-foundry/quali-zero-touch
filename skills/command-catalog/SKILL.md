@@ -1,5 +1,12 @@
 ---
-description: Show Torque catalog items (blueprints available to launch)
+name: catalog
+description: >
+  Show Torque catalog items — published blueprints the user can launch in the current space.
+  Use this skill when the user asks "what blueprints can I launch", "show me the Torque catalog",
+  "what's available in Torque", "list catalog items", "list published blueprints",
+  "find a blueprint for X", "what can I deploy from Torque", "browse Torque catalog",
+  or invokes /catalog. Optionally accepts a filter argument to substring-match on
+  blueprint name or description. Pair with /launch-env to actually deploy.
 argument-hint: [filter]
 ---
 
