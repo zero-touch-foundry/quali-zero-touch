@@ -104,20 +104,126 @@ Run `claude`, then in the session:
 
 The quickstart command verifies authentication, lists your spaces, and surfaces fix-it instructions if anything is wrong.
 
-### Install the plugin
+### Install the plugin (Claude Code CLI)
 
-This plugin is not yet published to the Anthropic marketplace. To install locally:
+This plugin is not yet on the Anthropic marketplace. Three local-install options:
+
+**Option 1 — session-scoped (fastest for testing)**
 
 ```bash
-# Clone the repo
 git clone <repo-url> quali-claude-plugin
 cd quali-claude-plugin
-
-# Install as a local Claude Code plugin
-claude plugin install ./
+claude --plugin-dir .
 ```
 
-(Marketplace installation instructions will be added when published.)
+The plugin loads for that session only.
+
+**Option 2 — zip-based**
+
+```bash
+cd quali-claude-plugin
+./pack.sh
+claude --plugin-dir dist/quali-claude-plugin-0.1.0.zip
+```
+
+**Option 3 — persistent via a local marketplace**
+
+See the marketplace setup snippets in the [Claude Desktop install section](#install-in-claude-desktop-code--cowork-tabs) — the same marketplace folder works for the CLI:
+
+```bash
+/plugin marketplace add ~/quali-local
+/plugin install quali-claude-plugin@quali-local
+```
+
+(Marketplace installation instructions for the public Anthropic marketplace will be added when published.)
+
+### Install in Claude Desktop (Code / Cowork tabs)
+
+Claude Desktop's **Code** tab (and **Cowork** tab) host the full Claude Code runtime, so plugins, slash commands, skills, and `.mcp.json` MCP servers all work the same as the CLI. The **Chat** tab is conversation-only and does not run plugins.
+
+**Step 1 — build a zip**
+
+From the plugin root:
+
+```bash
+./pack.sh
+```
+
+Produces `dist/quali-claude-plugin-<version>.zip` with a clean top-level folder layout. Share that zip or use it for the next steps.
+
+**Step 2 — install in Claude Desktop**
+
+Open Claude Desktop → **Code** tab → **+** button next to the prompt → **Plugins**. Two options:
+
+- **Upload zip** — point at the file produced by `pack.sh`. Simplest path.
+- **Add local marketplace** — for iterative dev. Create a marketplace folder once:
+
+  macOS / Linux:
+  ```bash
+  PLUGIN_PATH="/full/path/to/quali-claude-plugin"
+  mkdir -p ~/quali-local/.claude-plugin
+  cat > ~/quali-local/.claude-plugin/marketplace.json <<EOF
+  {
+    "name": "quali-local",
+    "plugins": [
+      { "name": "quali-claude-plugin", "source": "$PLUGIN_PATH" }
+    ]
+  }
+  EOF
+  ```
+
+  Windows (PowerShell):
+  ```powershell
+  $PluginPath = "C:\full\path\to\quali-claude-plugin"
+  $MarketDir  = "$HOME\quali-local\.claude-plugin"
+  New-Item -ItemType Directory -Force -Path $MarketDir | Out-Null
+  @"
+  {
+    "name": "quali-local",
+    "plugins": [
+      { "name": "quali-claude-plugin", "source": "$PluginPath" }
+    ]
+  }
+  "@ | Set-Content -Encoding UTF8 "$MarketDir\marketplace.json"
+  ```
+
+  Then in Claude Desktop's plugin UI, add the marketplace path (`~/quali-local` or `%USERPROFILE%\quali-local`) and install `quali-claude-plugin` from it.
+
+**Step 3 — set env vars**
+
+Claude Desktop reads env vars from the OS environment at app launch.
+
+- **macOS**: add `export TORQUE_API_TOKEN="..."` (and optional `export TORQUE_MCP_URL="..."`) to `~/.zshenv`. `.zshenv` loads for all zsh processes including those spawned by GUI apps; `.zshrc` loads only for interactive shells and is **not** read when launching Claude Desktop from Finder. Log out and back in, or restart, after editing.
+- **Linux**: same idea — use `~/.profile` (loaded at login) rather than `~/.bashrc` (interactive-only). Log out and back in.
+- **Windows**: open **Settings → System → About → Advanced system settings → Environment Variables**. Add `TORQUE_API_TOKEN` (and optional `TORQUE_MCP_URL`) under **User variables**. Click OK, then fully quit Claude Desktop (right-click tray icon → **Quit**, not just closing the window) and reopen it.
+
+**Step 4 — verify**
+
+In the Code tab, type `/torque-quickstart`. It checks the env var, surfaces fix-it instructions if missing, then calls `get_spaces` to confirm end-to-end auth.
+
+**Chat tab — MCP only, no plugin**
+
+The Chat tab does not run plugins, but you can still register the Torque MCP server there for the 12 Torque tools (no slash commands, no skills). Edit Claude Desktop's MCP config:
+
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+- Linux: `~/.config/Claude/claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "TorqueMCP": {
+      "type": "http",
+      "url": "https://portal.qtorque.io/mcp",
+      "headers": {
+        "Authorization": "Bearer PASTE_YOUR_TOKEN_HERE"
+      }
+    }
+  }
+}
+```
+
+Restart Claude Desktop. Replace the URL for on-prem / dedicated tenants.
 
 ## Troubleshooting
 

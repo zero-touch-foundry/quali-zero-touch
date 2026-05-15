@@ -6,18 +6,45 @@ Guide a new Torque user from zero to a launched environment. Adapt to their expe
 
 ## Phase 1 — Setup check
 
-1. Call `get_spaces` via the Torque MCP. This single call validates token + URL + network in one step.
-2. If it succeeds → list the spaces the user has access to and ask which to work in.
-3. If it fails, diagnose the error and surface the matching fix:
+### Step 1a — Pre-flight check for `TORQUE_API_TOKEN`
 
-| Error | Likely cause | Fix to surface to user |
+Before calling any MCP tool, verify the env var exists. Run this via Bash:
+
+```bash
+test -n "$TORQUE_API_TOKEN" && echo "TOKEN_OK" || echo "TOKEN_MISSING"
+```
+
+(On Windows / cmd, use `if defined TORQUE_API_TOKEN echo TOKEN_OK`. In PowerShell: `if ($env:TORQUE_API_TOKEN) { 'TOKEN_OK' } else { 'TOKEN_MISSING' }`.)
+
+If output is `TOKEN_MISSING`:
+
+1. Ask the user: "Do you already have a Torque API token, or do you need to generate one?"
+   - If they need one: link to the README's "Step 1 — Get a Torque API token" section and the [Torque API docs](https://docs.qtorque.io/api). Wait for them to obtain one.
+2. Once they have a token, **offer to write the export line to their shell profile**:
+   - Detect the user's shell: `echo $SHELL` → `/bin/zsh` → `~/.zshenv` (preferred for GUI app inheritance) or `~/.zshrc`. `/bin/bash` → `~/.bash_profile` (macOS) or `~/.profile` (Linux).
+   - Ask for the token value. Treat it as sensitive — do not echo it back in plain text in subsequent messages.
+   - Confirm: "I'll append `export TORQUE_API_TOKEN=\"<redacted>\"` to `<profile-path>`. Continue?"
+   - On confirmation, append the line. Verify the file is not world-readable (`chmod 600` if needed).
+   - Remind the user they must restart Claude Code / Claude Desktop for the change to take effect.
+3. On Windows, walk the user through **Settings → System → About → Advanced system settings → Environment Variables → User variables** to add `TORQUE_API_TOKEN`. Then restart Claude Desktop fully (quit, not just close).
+4. Optionally, ask if they need to set `TORQUE_MCP_URL` (only for on-prem / dedicated Torque tenants).
+5. **Stop here** until restart is confirmed.
+
+### Step 1b — Validate live
+
+Once the token is set, call `get_spaces` via the Torque MCP. This single call validates token + URL + network in one step.
+
+- Success → list the spaces and ask which to work in. Proceed to Phase 2.
+- Failure → diagnose with the table below and surface the matching fix:
+
+| Error | Likely cause | Fix to surface |
 |---|---|---|
-| MCP tool not available / Claude can't see Torque tools | Plugin not installed or `TORQUE_API_TOKEN` unset (Claude Code fails silently at config parse) | Tell user: set `export TORQUE_API_TOKEN="..."` in shell profile, restart Claude Code. Link to README "Authentication" section. |
-| 401 Unauthorized | Token invalid / expired | Regenerate at the Torque portal (My Account → Personal API Tokens). Re-set env var and restart. |
+| MCP tool not available / Claude can't see Torque tools | Plugin not loaded, or env var still missing because the session wasn't restarted after setting it | Confirm `/help` shows Torque commands. If yes but tools are absent, restart Claude Code / Desktop. |
+| 401 Unauthorized | Token invalid / expired | Regenerate at the Torque portal (My Account → Personal API Tokens). Re-run `/torque-quickstart` to update the profile. |
 | 403 Forbidden | Token scope mismatch | Use a personal API token, or scope the space token correctly. |
-| Connection refused / timeout | Wrong `TORQUE_MCP_URL` or network/VPN issue | For users using a different torque instance: `export TORQUE_MCP_URL="https://<torque.tenant.url>/mcp"`. For SaaS: check VPN, corporate proxy, firewall. |
+| Connection refused / timeout | Wrong `TORQUE_MCP_URL` or network/VPN issue | For non-SaaS Torque: `export TORQUE_MCP_URL="https://<tenant>/mcp"`. For SaaS: check VPN, corporate proxy, firewall. |
 
-After surfacing the fix, **stop**. The user must restart Claude Code after setting env vars. Don't continue Phase 2 until `get_spaces` works.
+After surfacing the fix, **stop**. Don't continue Phase 2 until `get_spaces` works.
 
 ## Phase 2 — Orient
 
