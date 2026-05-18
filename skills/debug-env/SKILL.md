@@ -44,7 +44,7 @@ Extract: **hostname**, **space_name**, **environment_id**.
 
 ### Manual fallback
 Ask the user for:
-- **API token** — must be configured before running scripts. Run `python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" configure --show` to check. If not set, see `command-torque-quickstart` (sends user to `<host>/my-token`, writes via `configure --token-stdin`).
+- **API token** — must be configured before running scripts. Run `python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" configure --show` to check. If not set, see `zero-touch-quickstart` (sends user to `<host>/my-token`, writes via `configure --token-stdin`).
 - **Space name**
 - **Environment ID**
 - For self-hosted / dedicated tenants: configure the host with `... configure --host "<hostname>"` (or `export TORQUE_API_HOST`).

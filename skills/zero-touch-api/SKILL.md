@@ -29,7 +29,7 @@ Every Torque-skill in this plugin calls Torque through these scripts. **No raw `
    python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" configure --show
    ```
 
-   If nothing's set, the `command-torque-quickstart` skill walks the user through setup (writes the config file with `--token-stdin` so the token never appears in transcript / shell history).
+   If nothing's set, the `zero-touch-quickstart` skill walks the user through setup (writes the config file with `--token-stdin` so the token never appears in transcript / shell history).
 
 2. **Pick the right script from the "Script manifest" table below.** Do not guess script names from filename patterns — the manifest is authoritative.
 3. **Always run the chosen script with `--help` first** to see its exact arg names, defaults, and behavior. Skip this step and you will hallucinate flags that don't exist.
@@ -169,7 +169,7 @@ host  = portal.qtorque.io
 
 Claude Code prompts the user to approve each Bash invocation by default. The plugin ships a narrow allowlist at `${CLAUDE_PLUGIN_ROOT}/suggested-settings.json` covering helper + example scripts (token-write via `configure --token-stdin` is intentionally excluded). Two ways to apply it:
 
-- Run `/torque-quickstart` — Step 1c offers to merge the allowlist into the project's `.claude/settings.local.json`.
+- Run `/zero-touch-quickstart` — Step 1c offers to merge the allowlist into the project's `.claude/settings.local.json`.
 - Manually copy the `permissions.allow` array from `suggested-settings.json` into `.claude/settings.local.json`.
 
 The plugin also ships `.claude-plugin/settings.json` with the same allowlist — Claude Code may honor it as a plugin-default someday, but this is undocumented; treat the project-level merge as the source of truth.

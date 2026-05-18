@@ -24,7 +24,7 @@ Claude Code plugin for [Quali Torque](https://www.quali.com/torque/) — environ
 
 ### Commands (user-invocable skills)
 
-These ship as skills under `skills/command-*/` and can be invoked directly with `/` (slash) or by natural language matching their description. Per the early-2026 Claude Code change, slash commands and skills are now one unified system — no separate `commands/` directory.
+These ship as skills under `skills/<skill>/` and can be invoked directly with `/` (slash) or by natural language matching their description. Per the early-2026 Claude Code change, slash commands and skills are now one unified system — no separate `commands/` directory.
 
 | Slash | Description |
 |-------|-------------|
@@ -34,7 +34,7 @@ These ship as skills under `skills/command-*/` and can be invoked directly with 
 | `/deploy-check [file]` | Pre-deployment validation — server-side blueprint validation (`POST /spaces/{space}/validations/blueprints`) + design review via `blueprint-review`. |
 | `/run-workflow [env] [workflow]` | Run a Torque day-2 workflow on an environment, with input prompting and confirmation. |
 | `/catalog [filter]` | List published blueprints (catalog items) available to launch in the current space. |
-| `/torque-quickstart` | First-time user walkthrough — auth check, space selection, first launch or first blueprint. |
+| `/zero-touch-quickstart` | First-time user walkthrough — auth check, space selection, first launch or first blueprint. |
 | `/blueprint-from-asset [path]` | Scaffold a Torque blueprint from an existing IaC asset (Terraform, OpenTofu, Helm, Ansible, K8s, CloudFormation, Terragrunt). Auto-detects type. |
 
 ### Torque API integration
@@ -72,7 +72,7 @@ For space-scoped tokens or token-scope guidance, see **Space Settings → Integr
 
 ### Step 2 — Configure credentials (one time)
 
-Run `/torque-quickstart` after installing the plugin (next step) and Claude will walk you through it. The skill writes the token + host to a `chmod 600` config file at:
+Run `/zero-touch-quickstart` after installing the plugin (next step) and Claude will walk you through it. The skill writes the token + host to a `chmod 600` config file at:
 
 - Linux/macOS: `~/.config/quali-torque/config`
 - Windows: `%APPDATA%\quali-torque\config`
@@ -110,7 +110,7 @@ export TORQUE_API_HOST="tenant.example.com"   # hostname only, no scheme, no pat
 Run `claude`, then in the session:
 
 ```
-/torque-quickstart
+/zero-touch-quickstart
 ```
 
 The quickstart command verifies authentication, lists your spaces, surfaces fix-it instructions if anything is wrong, and offers to whitelist this plugin's helper scripts in `.claude/settings.local.json` so Claude stops prompting for permission on every API call (see [Permissions](#permissions) below).
@@ -119,7 +119,7 @@ The quickstart command verifies authentication, lists your spaces, surfaces fix-
 
 The plugin runs Python helper scripts via Bash. By default Claude Code asks the user to approve each invocation, which gets noisy. Two paths to silence the prompts:
 
-1. **Via `/torque-quickstart`** (recommended) — Step 1c offers to merge the plugin's safe-by-design allowlist into your project's `.claude/settings.local.json`. Token writes (`configure --token-stdin`) are intentionally **not** allowlisted — credential changes stay human-in-the-loop.
+1. **Via `/zero-touch-quickstart`** (recommended) — Step 1c offers to merge the plugin's safe-by-design allowlist into your project's `.claude/settings.local.json`. Token writes (`configure --token-stdin`) are intentionally **not** allowlisted — credential changes stay human-in-the-loop.
 
 2. **Manually** — copy `suggested-settings.json` (shipped at the plugin root) into your project's `.claude/settings.local.json`:
 
@@ -198,7 +198,7 @@ The repo also ships a `.claude-plugin/marketplace.json`, so once it's hosted on 
 
 **Step 3 — configure credentials**
 
-In the Code tab, type `/torque-quickstart`. It will:
+In the Code tab, type `/zero-touch-quickstart`. It will:
 - check whether credentials are already configured (`configure --show`),
 - if not, ask for the host (SaaS vs self-hosted), point you at `<host>/my-token`, and write the token to the config file via `configure --token-stdin`.
 
@@ -206,7 +206,7 @@ The config file path is OS-default (`~/.config/quali-torque/config` on macOS/Lin
 
 **Step 4 — verify**
 
-`/torque-quickstart` finishes by listing your spaces via `get_spaces.py` to confirm end-to-end auth.
+`/zero-touch-quickstart` finishes by listing your spaces via `get_spaces.py` to confirm end-to-end auth.
 
 ## Troubleshooting
 
@@ -214,7 +214,7 @@ Full error reference: `skills/zero-touch-api/references/errors.md`.
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Script error: `Torque API token not configured` | Config file missing and `TORQUE_API_TOKEN` env unset | Run `/torque-quickstart`, or manually: `printf '%s' "<TOKEN>" \| python skills/zero-touch-api/scripts/torque_api.py configure --token-stdin`. |
+| Script error: `Torque API token not configured` | Config file missing and `TORQUE_API_TOKEN` env unset | Run `/zero-touch-quickstart`, or manually: `printf '%s' "<TOKEN>" \| python skills/zero-touch-api/scripts/torque_api.py configure --token-stdin`. |
 | `ERROR HTTP 401` | Token invalid, expired, or wrong account | Regenerate at the Torque portal. Confirm no leading/trailing whitespace. |
 | `ERROR HTTP 403` | Token scope mismatch (space-scoped vs account-wide) | Use a personal API token, or scope your space token to the correct space. |
 | `ERROR HTTP 0` / connection refused / timeout | Wrong host for an on-prem/dedicated tenant, or VPN/proxy issue | `python skills/zero-touch-api/scripts/torque_api.py configure --host "<tenant-host>"` (hostname only). Verify VPN / proxy. |
@@ -261,7 +261,7 @@ or, naturally:
     │   ├── scripts/torque_api.py
     │   ├── scripts/examples/*.py
     │   └── references/*.md
-    ├── command-*/               # user-invocable skills (/env-status, /launch-env, ...)
+    ├── <skill>/               # user-invocable skills (/env-status, /launch-env, ...)
     └── torque-*, aws-*, k8s-*   # knowledge skills (auto-triggered by description)
 ```
 
