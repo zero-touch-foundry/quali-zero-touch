@@ -1,5 +1,5 @@
 ---
-name: torque-rego
+name: author-rego-policy
 description: >
   Use this skill whenever the user wants to create, write, edit, fix, or review a Torque OPA/Rego 
   governance policy. Triggers include: "write a Torque policy", "create a Rego policy for Torque",

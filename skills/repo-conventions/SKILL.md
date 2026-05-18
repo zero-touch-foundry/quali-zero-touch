@@ -11,8 +11,8 @@ This skill owns **cross-cutting, repo-wide layout conventions** for Torque proje
 - How to write a blueprint YAML → use `author-blueprint`
 - How to structure a Terraform module's internal files → use `reusable-terraform`
 - How to structure an Ansible playbook's internal files → use `reusable-ansible`
-- How to write a workflow YAML → use `torque-workflow`
-- How to write a Rego policy → use `torque-rego`
+- How to write a workflow YAML → use `author-workflow`
+- How to write a Rego policy → use `author-rego-policy`
 
 This skill answers: **where in the repo does each artifact live, and how should multiple artifacts relate to each other?**
 

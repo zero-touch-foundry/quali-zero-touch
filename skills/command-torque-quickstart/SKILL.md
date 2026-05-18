@@ -148,8 +148,8 @@ Ask what the user wants to do:
 
 After the first task, surface 2–3 follow-ups:
 - `/catalog` to discover more blueprints.
-- `torque-workflow` skill for day-2 ops.
-- `torque-rego` skill for governance.
+- `author-workflow` skill for day-2 ops.
+- `author-rego-policy` skill for governance.
 - `cost-analysis` for spend visibility.
 
 Keep it short. The goal is **one** successful task, not an exhaustive tour.

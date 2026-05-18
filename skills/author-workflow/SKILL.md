@@ -1,5 +1,5 @@
 ---
-name: torque-workflow
+name: author-workflow
 description: >
   Use this skill whenever the user wants to create, write, edit, fix, or review a Torque workflow YAML file.
   Triggers include: "write a Torque workflow", "create a workflow for Torque", "create a workflow in Torque", "workflow YAML",
