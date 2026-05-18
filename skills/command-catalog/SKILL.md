@@ -12,16 +12,16 @@ argument-hint: [filter]
 
 Show the Torque catalog — published blueprints the user can launch in the current space.
 
-**Before running any helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.** Response shapes are in `skills/torque-api/references/response_shapes.md`.
+**Before running any helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.** Response shapes are in `skills/zero-touch-api/references/response_shapes.md`.
 
 1. If the active space is not known, run:
    ```bash
-   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_spaces.py" --names-only
+   python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/examples/get_spaces.py" --names-only
    ```
    and ask the user to pick one.
 2. Fetch the catalog:
    ```bash
-   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_catalog.py" --space <SPACE>
+   python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/examples/get_catalog.py" --space <SPACE>
    ```
 3. If `"$ARGUMENTS"` is provided, filter the parsed JSON by case-insensitive substring match on `name` or `description`.
 4. Present results as a table: **name**, **description** (truncated to ~80 chars), **inputs required** (count entries in `inputs[]` where `required` is true and no `default`), **labels** if available.

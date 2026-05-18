@@ -13,7 +13,7 @@ description: >
 
 Guide a new Torque user from zero to a launched environment. Adapt to their experience level by asking before assuming.
 
-**Before running any helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.**
+**Before running any helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.**
 
 ## Phase 1 — Setup check
 
@@ -26,7 +26,7 @@ Make sure you let the user know what are you checking for and why, so they under
 Check current state:
 
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" configure --show
+python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" configure --show
 ```
 
 Output is either credentials with the token masked, or a hint that nothing is configured.
@@ -46,11 +46,11 @@ If no token is configured:
 
    ```bash
    # SaaS:
-   printf '%s' "<TOKEN>" | python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" \
+   printf '%s' "<TOKEN>" | python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" \
      configure --token-stdin
 
    # Self-hosted (writes both token + host):
-   printf '%s' "<TOKEN>" | python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" \
+   printf '%s' "<TOKEN>" | python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" \
      configure --token-stdin --host "<HOSTNAME>"
    ```
 4. Confirm with `configure --show` that the masked token appears and the host is right.
@@ -67,11 +67,11 @@ Other ways to set credentials (advanced):
 Once the token is set, list spaces. This single call validates token + host + network in one step:
 
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_spaces.py" --names-only
+python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/examples/get_spaces.py" --names-only
 ```
 
 - Success → list the spaces and ask which to work in. Proceed to Phase 2.
-- Failure → diagnose with the table below and surface the matching fix. Full error reference at `skills/torque-api/references/errors.md`.
+- Failure → diagnose with the table below and surface the matching fix. Full error reference at `skills/zero-touch-api/references/errors.md`.
 
 | Error | Likely cause | Fix to surface |
 |---|---|---|
@@ -89,7 +89,7 @@ By default Claude Code asks the user to approve each Bash invocation. Since this
 
 1. Check whether the allowlist already covers our scripts:
    ```bash
-   test -f .claude/settings.local.json && grep -q "torque-api/scripts" .claude/settings.local.json && echo "PERMS_OK" || echo "PERMS_MISSING"
+   test -f .claude/settings.local.json && grep -q "zero-touch-api/scripts" .claude/settings.local.json && echo "PERMS_OK" || echo "PERMS_MISSING"
    ```
 
 2. If `PERMS_MISSING`, ask: "Want me to whitelist this plugin's helper scripts in `.claude/settings.local.json` so Claude stops asking for permission per call? (Token writes via `configure --token-stdin` will still prompt.)"
@@ -102,8 +102,8 @@ By default Claude Code asks the user to approve each Bash invocation. Since this
        "allow": [
          "Bash(python *torque_api.py:*)",
          "Bash(python3 *torque_api.py:*)",
-         "Bash(python *torque-api/scripts/examples/*)",
-         "Bash(python3 *torque-api/scripts/examples/*)"
+         "Bash(python *zero-touch-api/scripts/examples/*)",
+         "Bash(python3 *zero-touch-api/scripts/examples/*)"
        ]
      }
    }
@@ -126,7 +126,7 @@ Ask what the user wants to do:
 
 1. Fetch the catalog:
    ```bash
-   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_catalog.py" --space <SPACE>
+   python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/examples/get_catalog.py" --space <SPACE>
    ```
 2. Show a short list (name + description + required inputs count).
 3. Pick one with the user. Use `/launch-env <name>` for the rest of the flow.

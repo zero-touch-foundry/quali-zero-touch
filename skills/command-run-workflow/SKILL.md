@@ -6,17 +6,17 @@ argument-hint: "[environment-name-or-id] [workflow-name]"
 
 Run a Torque workflow on the environment "$1".
 
-**Before running any helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.**
+**Before running any helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.**
 
 1. **Resolve the environment** — if "$1" looks like an ID, use it directly. Otherwise list environments and find by name:
    ```bash
-   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_environments.py" --space <SPACE> --name "$1"
+   python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/examples/get_environments.py" --space <SPACE> --name "$1"
    ```
    If multiple matches or none, ask the user to clarify.
 
 2. **List available workflows** in the space (workflows are blueprints with `sub_type=workflow`):
    ```bash
-   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_blueprints.py" --space <SPACE> --sub-type workflow
+   python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/examples/get_blueprints.py" --space <SPACE> --sub-type workflow
    ```
    Present them as a numbered list with `name` + `description`.
 
@@ -24,7 +24,7 @@ Run a Torque workflow on the environment "$1".
 
 4. **Gather inputs** — fetch the workflow blueprint YAML to read its input definitions:
    ```bash
-   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_blueprint_yaml.py" --space <SPACE> --name <WORKFLOW_NAME>
+   python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/examples/get_blueprint_yaml.py" --space <SPACE> --name <WORKFLOW_NAME>
    ```
    For any required input without a default, ask the user. Show defaults clearly. Mark sensitive inputs (don't echo values).
 
@@ -32,7 +32,7 @@ Run a Torque workflow on the environment "$1".
 
 6. **Run**:
    ```bash
-   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/run_workflow.py" \
+   python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/examples/run_workflow.py" \
      --space <SPACE> --workflow <NAME> --target-env <ENV_ID> \
      --inputs '<JSON_OBJECT>'
    ```
@@ -40,7 +40,7 @@ Run a Torque workflow on the environment "$1".
 
 7. **Follow-up** — offer to poll status:
    ```bash
-   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_workflow_instantiations.py" --space <SPACE> --id <ENV_ID>
+   python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/examples/get_workflow_instantiations.py" --space <SPACE> --id <ENV_ID>
    ```
    Or run `/env-status` after completion.
 
