@@ -16,8 +16,8 @@ Credential resolution order:
 
 Config file path (in order):
   $TORQUE_CONFIG_FILE                                          (escape hatch)
-  $XDG_CONFIG_HOME/quali-torque/config  or  ~/.config/quali-torque/config  (Unix)
-  %APPDATA%\\quali-torque\\config                                (Windows)
+  $XDG_CONFIG_HOME/quali-zero-touch/config  or  ~/.config/quali-zero-touch/config  (Unix)
+  %APPDATA%\\quali-zero-touch\\config                                (Windows)
 
 Format (INI-ish, no section header):
   token = eyJhbGciOi...
@@ -78,7 +78,7 @@ def _config_path() -> str:
         base = os.environ.get("APPDATA") or os.path.expanduser("~\\AppData\\Roaming")
     else:
         base = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
-    return os.path.join(base, "quali-torque", "config")
+    return os.path.join(base, "quali-zero-touch", "config")
 
 
 def _read_config_file() -> Dict[str, str]:

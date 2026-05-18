@@ -19,7 +19,7 @@ Guide a new Torque user from zero to a launched environment. Adapt to their expe
 
 ### Step 1a — Pre-flight check for credentials
 
-The plugin stores the API token + host in a config file (`~/.config/quali-torque/config` on Unix, `%APPDATA%\quali-torque\config` on Windows), `chmod 600`. The helper script reads it automatically — no `export` needed per session. The `TORQUE_API_TOKEN` / `TORQUE_API_HOST` env vars still work and override the file when set.
+The plugin stores the API token + host in a config file (`~/.config/quali-zero-touch/config` on Unix, `%APPDATA%\quali-zero-touch\config` on Windows), `chmod 600`. The helper script reads it automatically — no `export` needed per session. The `TORQUE_API_TOKEN` / `TORQUE_API_HOST` env vars still work and override the file when set.
 
 Make sure you let the user know what are you checking for and why, so they understand the value of the step and aren't confused by the questions.
 

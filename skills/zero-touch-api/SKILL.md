@@ -64,7 +64,7 @@ The helper:
 
 ### `configure` subcommand
 
-Manage the config file (`~/.config/quali-torque/config` on Unix, `%APPDATA%\quali-torque\config` on Windows, `chmod 600`):
+Manage the config file (`~/.config/quali-zero-touch/config` on Unix, `%APPDATA%\quali-zero-touch\config` on Windows, `chmod 600`):
 
 ```bash
 # Show current state (token masked)
@@ -156,8 +156,8 @@ Default storage is the config file (managed via `configure` subcommand above). E
 | `HTTPS_PROXY` / `HTTP_PROXY` | Honored automatically by `urllib`. | — |
 
 Config file path:
-- Linux/macOS: `$XDG_CONFIG_HOME/quali-torque/config` (else `~/.config/quali-torque/config`)
-- Windows: `%APPDATA%\quali-torque\config`
+- Linux/macOS: `$XDG_CONFIG_HOME/quali-zero-touch/config` (else `~/.config/quali-zero-touch/config`)
+- Windows: `%APPDATA%\quali-zero-touch\config`
 
 Format (INI-ish, no section header):
 ```

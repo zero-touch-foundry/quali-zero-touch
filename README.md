@@ -74,8 +74,8 @@ For space-scoped tokens or token-scope guidance, see **Space Settings → Integr
 
 Run `/zero-touch-quickstart` after installing the plugin (next step) and Claude will walk you through it. The skill writes the token + host to a `chmod 600` config file at:
 
-- Linux/macOS: `~/.config/quali-torque/config`
-- Windows: `%APPDATA%\quali-torque\config`
+- Linux/macOS: `~/.config/quali-zero-touch/config`
+- Windows: `%APPDATA%\quali-zero-touch\config`
 
 Helper scripts read this file on every call — no need to `export` the token each session. The skill uses `--token-stdin` so the raw token never appears in your shell history or Claude transcript.
 
@@ -202,7 +202,7 @@ In the Code tab, type `/zero-touch-quickstart`. It will:
 - check whether credentials are already configured (`configure --show`),
 - if not, ask for the host (SaaS vs self-hosted), point you at `<host>/my-token`, and write the token to the config file via `configure --token-stdin`.
 
-The config file path is OS-default (`~/.config/quali-torque/config` on macOS/Linux, `%APPDATA%\quali-torque\config` on Windows), `chmod 600`. The plugin's helper scripts read it on every call — no shell-profile or env-var setup needed.
+The config file path is OS-default (`~/.config/quali-zero-touch/config` on macOS/Linux, `%APPDATA%\quali-zero-touch\config` on Windows), `chmod 600`. The plugin's helper scripts read it on every call — no shell-profile or env-var setup needed.
 
 **Step 4 — verify**
 
