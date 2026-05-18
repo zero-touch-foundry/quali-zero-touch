@@ -1,5 +1,5 @@
 ---
-name: torque-ready-terraform
+name: reusable-terraform
 description: "Use this skill whenever the user is writing, reviewing, or refactoring Terraform or OpenTofu code that will run inside Torque (Quali Torque) as a grain. Triggers include: mentions of 'Terraform', 'Torque', 'grain', 'blueprint', 'module', 'tf module', 'tofu', 'opentofu', or requests to make Terraform / OpenTofu code 'Torque-ready', 'Torque-compatible' or make it into a good 'building block'. Also trigger when the user asks about parameterizing Terraform / OpenTofu resources or assets for Torque, Terraform grain outputs, provider versioning for Torque, or converting existing Terraform to Torque assets. Use for reviewing existing Terraform code, converting living infrastructure configs to reusable Torque grains, parameterizing resources, defining outputs, or fixing provider version constraints."
 
 ---

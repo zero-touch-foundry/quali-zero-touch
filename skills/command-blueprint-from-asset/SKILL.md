@@ -10,8 +10,8 @@ description: >
   "scaffold a blueprint around my existing code", or invokes /blueprint-from-asset. Composes
   multi-grain blueprints when a directory contains mixed asset types (e.g. Terraform infra +
   Ansible config). Hands Terragrunt off to terragrunt-migrate and Terraform / Ansible
-  through torque-ready-terraform / reusable-ansible for pre-flight refactor suggestions.
-argument-hint: [path-to-asset]
+  through reusable-terraform / reusable-ansible for pre-flight refactor suggestions.
+argument-hint: "[path-to-asset]"
 ---
 
 Generate a Torque blueprint that wraps the IaC asset at @$1.
@@ -61,7 +61,7 @@ For multi-asset directories, also wire `depends-on` between grains.
 
 For Terragrunt assets specifically, hand off to the `terragrunt-migrate` skill — it does dependency-block and remote_state conversion that's beyond a basic wrap.
 
-For Terraform/OpenTofu assets, also invoke `torque-ready-terraform` skill to flag any module-side changes needed (e.g., missing outputs, hardcoded values that should be variables).
+For Terraform/OpenTofu assets, also invoke `reusable-terraform` skill to flag any module-side changes needed (e.g., missing outputs, hardcoded values that should be variables).
 
 For Ansible, invoke `reusable-ansible` skill for similar pre-flight refactor suggestions.
 

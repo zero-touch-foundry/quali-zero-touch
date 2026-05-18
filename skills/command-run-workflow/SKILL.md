@@ -1,7 +1,7 @@
 ---
 name: run-workflow
 description: Run a Torque day-2 workflow on an environment
-argument-hint: [environment-name-or-id] [workflow-name]
+argument-hint: "[environment-name-or-id] [workflow-name]"
 ---
 
 Run a Torque workflow on the environment "$1".
