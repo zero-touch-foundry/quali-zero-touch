@@ -39,7 +39,7 @@ These ship as skills under `skills/command-*/` and can be invoked directly with 
 
 ### Torque API integration
 
-The plugin talks to Torque via its REST API. A shared **`torque-api`** skill at `skills/torque-api/` centralizes the Python helper (`torque_api.py`, stdlib only), per-endpoint example scripts, and endpoint/response/error references. All other skills call those scripts — no skill makes raw HTTP calls.
+The plugin talks to Torque via its REST API. A shared **`zero-touch-api`** skill at `skills/zero-touch-api/` centralizes the Python helper (`torque_api.py`, stdlib only), per-endpoint example scripts, and endpoint/response/error references. All other skills call those scripts — no skill makes raw HTTP calls.
 
 Currently wrapped endpoints (one example script each):
 
@@ -50,7 +50,7 @@ Currently wrapped endpoints (one example script each):
 - run day-2 workflow
 - find grain usage examples across blueprints
 
-To extend with a new Torque API operation, see `skills/torque-api/SKILL.md` — the extension recipe is mechanical (add a row to `endpoints.md`, drop an example script, reference it from the consuming skill).
+To extend with a new Torque API operation, see `skills/zero-touch-api/SKILL.md` — the extension recipe is mechanical (add a row to `endpoints.md`, drop an example script, reference it from the consuming skill).
 
 ## Installation
 
@@ -84,16 +84,16 @@ If you prefer to do it manually:
 ```bash
 # Token (piped so it stays out of shell history):
 printf '%s' "PASTE_YOUR_TOKEN_HERE" | \
-  python ~/path/to/plugin/skills/torque-api/scripts/torque_api.py configure --token-stdin
+  python ~/path/to/plugin/skills/zero-touch-api/scripts/torque_api.py configure --token-stdin
 
 # Self-hosted host (SaaS users skip):
-python ~/path/to/plugin/skills/torque-api/scripts/torque_api.py configure --host tenant.example.com
+python ~/path/to/plugin/skills/zero-touch-api/scripts/torque_api.py configure --host tenant.example.com
 
 # Inspect (token shown masked):
-python ~/path/to/plugin/skills/torque-api/scripts/torque_api.py configure --show
+python ~/path/to/plugin/skills/zero-touch-api/scripts/torque_api.py configure --show
 
 # Wipe:
-python ~/path/to/plugin/skills/torque-api/scripts/torque_api.py configure --clear
+python ~/path/to/plugin/skills/zero-touch-api/scripts/torque_api.py configure --clear
 ```
 
 **Env-var overrides** (useful for CI, debugging, swapping tenants) — set either and the helper will use it instead of the config file:
@@ -128,15 +128,15 @@ The plugin runs Python helper scripts via Bash. By default Claude Code asks the 
    # then merge the permissions.allow array into .claude/settings.local.json
    ```
 
-   The patterns are narrow — they match only files under `torque-api/scripts/` so other Python scripts still prompt:
+   The patterns are narrow — they match only files under `zero-touch-api/scripts/` so other Python scripts still prompt:
 
    ```json
    "permissions": {
      "allow": [
        "Bash(python *torque_api.py:*)",
        "Bash(python3 *torque_api.py:*)",
-       "Bash(python *torque-api/scripts/examples/*)",
-       "Bash(python3 *torque-api/scripts/examples/*)"
+       "Bash(python *zero-touch-api/scripts/examples/*)",
+       "Bash(python3 *zero-touch-api/scripts/examples/*)"
      ]
    }
    ```
@@ -210,14 +210,14 @@ The config file path is OS-default (`~/.config/quali-torque/config` on macOS/Lin
 
 ## Troubleshooting
 
-Full error reference: `skills/torque-api/references/errors.md`.
+Full error reference: `skills/zero-touch-api/references/errors.md`.
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Script error: `Torque API token not configured` | Config file missing and `TORQUE_API_TOKEN` env unset | Run `/torque-quickstart`, or manually: `printf '%s' "<TOKEN>" \| python skills/torque-api/scripts/torque_api.py configure --token-stdin`. |
+| Script error: `Torque API token not configured` | Config file missing and `TORQUE_API_TOKEN` env unset | Run `/torque-quickstart`, or manually: `printf '%s' "<TOKEN>" \| python skills/zero-touch-api/scripts/torque_api.py configure --token-stdin`. |
 | `ERROR HTTP 401` | Token invalid, expired, or wrong account | Regenerate at the Torque portal. Confirm no leading/trailing whitespace. |
 | `ERROR HTTP 403` | Token scope mismatch (space-scoped vs account-wide) | Use a personal API token, or scope your space token to the correct space. |
-| `ERROR HTTP 0` / connection refused / timeout | Wrong host for an on-prem/dedicated tenant, or VPN/proxy issue | `python skills/torque-api/scripts/torque_api.py configure --host "<tenant-host>"` (hostname only). Verify VPN / proxy. |
+| `ERROR HTTP 0` / connection refused / timeout | Wrong host for an on-prem/dedicated tenant, or VPN/proxy issue | `python skills/zero-touch-api/scripts/torque_api.py configure --host "<tenant-host>"` (hostname only). Verify VPN / proxy. |
 | `/launch-env` shows no blueprints | Token scoped to a space without published blueprints | Run `/catalog` against another space, or check **Catalog** in the portal. |
 | `python: command not found` | Python 3.8+ not on PATH | Install Python 3 or expose `python3` as `python`. |
 | Plugin not visible / Claude doesn't see Torque skills | Plugin not loaded | `claude plugin list` to verify install. Check `~/.claude.json` or session logs for parse errors. |
@@ -257,7 +257,7 @@ or, naturally:
 ├── assets/icon.png              # marketplace icon (placeholder)
 ├── AGENTS.md                    # orientation for AI coding agents working on this repo
 └── skills/                      # unified skills directory
-    ├── torque-api/              # shared API helper (Python, stdlib) + endpoint reference
+    ├── zero-touch-api/          # shared API helper (Python, stdlib) + endpoint reference
     │   ├── scripts/torque_api.py
     │   ├── scripts/examples/*.py
     │   └── references/*.md

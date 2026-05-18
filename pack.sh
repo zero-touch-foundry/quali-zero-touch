@@ -59,7 +59,6 @@ INCLUDE=(
   ".claude-plugin"
   "skills"
   "assets"
-  "AGENTS.md"
   "README.md"
   "suggested-settings.json"
 )
