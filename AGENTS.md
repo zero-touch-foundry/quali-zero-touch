@@ -1,26 +1,31 @@
 # AGENTS.md
 
-This file orients AI coding agents (Claude Code, Cursor, Codex, Aider, etc.) working on the **quali-claude-plugin** repository.
+Orients AI coding agents (Claude Code, Cursor, Codex, Aider, etc.) working on the **zero-touch** plugin.
 
 ## What this repo is
 
 A [Claude Code plugin](https://docs.claude.com/claude-code) for [Quali Torque](https://www.quali.com/torque/). It bundles:
 
-- **Knowledge skills** (`skills/torque-*`, `skills/aws-*`, `skills/k8s-*`) — auto-triggered by Claude based on the user's intent, matched against each skill's `description`.
-- **User-invocable skills** (`skills/command-*`) — slash-invocable (e.g. `/launch-env`). Same SKILL.md format as knowledge skills; the prefix is a convention, not a runtime requirement. (As of early 2026 Claude Code unified `commands/` into the skills system.)
-- **Torque API integration** (`skills/zero-touch-api/`) — shared Python helper (`torque_api.py`, stdlib only) + per-endpoint example scripts + reference docs. All other skills make Torque REST calls through these scripts; the helper handles auth (`TORQUE_API_TOKEN`), host (`TORQUE_API_HOST`, default `portal.qtorque.io`), and typed error mapping.
+- **Skills** (`skills/<name>/SKILL.md`) — domain knowledge + procedures. Claude auto-triggers them by matching the user's intent against each skill's `description`. A skill can also be invoked as a slash command (e.g. `/launch-env`) when the user types its name. No folder-prefix convention distinguishes knowledge skills from commands — Claude Code unified that in early 2026. Commands just add `argument-hint:` frontmatter.
+- **Torque API integration** (`skills/zero-touch-api/`) — shared Python helper (`torque_api.py`, stdlib only) + per-endpoint example scripts + reference docs. All skills make Torque REST calls through these scripts; the helper handles auth (config file or `TORQUE_API_TOKEN`), host (config file or `TORQUE_API_HOST`, default `portal.qtorque.io`), and typed error mapping.
 
 ## Repository layout
 
 ```
 .
-├── .claude-plugin/plugin.json   # plugin manifest (name, version, author)
+├── .claude-plugin/
+│   ├── plugin.json              # plugin manifest (name, version, author)
+│   ├── marketplace.json         # marketplace entry
+│   └── settings.json            # plugin-level permission allowlist
 ├── .github/ISSUE_TEMPLATE/      # GitHub issue templates
 ├── assets/icon.png              # marketplace icon (placeholder)
-└── skills/                      # unified skills directory
-    ├── zero-touch-api/          # shared Torque REST helper + example scripts + references
-    ├── command-*/SKILL.md       # user-invocable (slash) skills
-    └── <other>/SKILL.md         # auto-triggered knowledge skills
+├── skills/                      # one folder per skill (see below)
+│   ├── zero-touch-api/          # shared Torque REST helper + example scripts + references
+│   └── <skill>/SKILL.md
+├── pack.sh                      # build distributable zip
+├── suggested-settings.json      # canonical user-settings allowlist
+├── AGENTS.md / CLAUDE.md        # dev-facing docs (excluded from zip)
+└── README.md                    # user-facing
 ```
 
 ## Conventions
@@ -28,23 +33,16 @@ A [Claude Code plugin](https://docs.claude.com/claude-code) for [Quali Torque](h
 ### Skills
 
 - Each skill lives in its own directory under `skills/`.
-- Required file: `SKILL.md` with frontmatter `name` and `description`.
+- Required file: `SKILL.md` with frontmatter `name` and `description`. `name` MUST equal the folder name.
 - `description` should be rich with trigger phrases — that's how Claude decides when to invoke the skill.
-- Skills prefixed `torque-*` mirror the public [`torque-ai-skills` repo](https://github.com/QualiTorque) and should stay in sync.  **Don't fork them here — PR upstream.**
-- Generic skills (`aws-best-practices`, `k8s-operations`, `cost-analysis`) are plugin-local — edit directly.
+- A skill becomes slash-invocable by adding `argument-hint:` frontmatter. It's still discoverable by description too.
+- The body should be thin orchestration when the skill is primarily a command — defer domain knowledge to other skills via "invoke the `<skill>` skill" rather than duplicating it.
 - Reference files (`references/foo.md`) are allowed and loaded on demand.
-
-### Commands
-
-- User-invocable "commands" are skills under `skills/command-<name>/SKILL.md` with `name`, `description`, and `argument-hint` frontmatter. Default `user-invocable: true` is implicit; do not set it explicitly unless overriding.
-- Commands should be thin orchestration layers — defer technical knowledge to skills.
-- When a command needs domain knowledge (e.g., blueprint structure), it should explicitly say "invoke the X skill" rather than re-implementing the knowledge.
 - Reference plugin files via `${CLAUDE_PLUGIN_ROOT}/skills/<skill>/SKILL.md`.
 
 ### Torque API access
 
 - Every Torque REST call goes through `skills/zero-touch-api/scripts/torque_api.py` (helper, stdlib only) or one of the per-endpoint example scripts in `skills/zero-touch-api/scripts/examples/`. **No skill calls `curl` or `urllib` directly.**
-- Auth: helper reads `TORQUE_API_TOKEN` from env. Host: `TORQUE_API_HOST` (default `portal.qtorque.io`). Never commit a token.
 - Endpoint table, response shapes, and error mapping live in `skills/zero-touch-api/references/`.
 - Adding a new Torque API operation = three mechanical steps (row in `endpoints.md`, new example script, reference from consuming skill). Recipe in `skills/zero-touch-api/SKILL.md`.
 
@@ -52,43 +50,43 @@ A [Claude Code plugin](https://docs.claude.com/claude-code) for [Quali Torque](h
 
 ### Adding a new skill
 
-1. Create `skills/<skill-name>/SKILL.md` with proper frontmatter.
+1. Create `skills/<skill-name>/SKILL.md` with proper frontmatter (`name` matches folder).
 2. Write the `description` field with many trigger phrases — invocation is description-driven.
-3. Structure the body in clear numbered steps. Include best practices and "never do" lists where applicable.
-4. Add a row to the README's Skills table.
-5. If the skill should also live in the upstream `torque-ai-skills` repo, plan that PR too.
+3. If slash-invocable, add `argument-hint:` frontmatter.
+4. Structure the body in clear numbered steps. Include best practices and "never do" lists where applicable.
+5. Add a row to the README's Skills table.
 
 ### SKILL.md frontmatter gotchas
 
 Claude Cowork's plugin validator is strict. The local `claude plugin validate` does **not** catch these — they fail silently on Cowork upload with a generic "validation error":
 
-- **`description` is hard-capped at 1024 characters** (after YAML folding `>` / quoting). Going over by even 1 char rejects the whole plugin. When editing rename refs inside a description, recount with: `python3 -c "import yaml,re; t=open('skills/X/SKILL.md').read(); m=re.match(r'---\n(.*?)\n---',t,re.S); print(len(yaml.safe_load(m.group(1))['description']))"`. Trim filler words first; cutting trigger phrases hurts invocation.
+- **`description` is hard-capped at 1024 characters** (after YAML folding `>` / quoting). Going over by even 1 char rejects the whole plugin. When editing rename refs inside a description, recount with:
+  ```bash
+  python3 -c "import yaml,re; t=open('skills/X/SKILL.md').read(); m=re.match(r'---\n(.*?)\n---',t,re.S); print(len(yaml.safe_load(m.group(1))['description']))"
+  ```
+  Trim filler words first; cutting trigger phrases hurts invocation.
 - **`argument-hint` with multiple brackets must be quoted.** `argument-hint: [env] [workflow]` is invalid YAML (two flow sequences in a row). Use `argument-hint: "[env] [workflow]"`. Single `[x]` is valid unquoted.
-- **`name` should equal the folder name.** Mismatches load but feel surprising; keep them aligned.
+- **`name` must equal the folder name.**
 
 When a Cowork upload fails opaquely, suspect description length first — `blueprint-review` hit this when `torque-api` (10 chars) → `zero-touch-api` (14 chars) in its description pushed it from 1021 → 1025.
 
-### Adding a new command
+### Renaming a skill
 
-1. Create `skills/command-<name>/SKILL.md` with `name`, `description`, and `argument-hint` frontmatter.
-2. Use `@$1`, `$ARGUMENTS` syntax for arguments — unchanged from the old commands format.
-3. Add a row to the README's Commands table.
-
-### Changing skill names
-
-- Search the entire repo for the old name — commands reference skills by path (`${CLAUDE_PLUGIN_ROOT}/skills/<name>`).
-- Update the README's Skills table.
+1. `git mv skills/<old> skills/<new>`.
+2. Update `name:` in `SKILL.md`.
+3. `grep -r '<old>'` across `*.md`, `*.json`, `*.sh`, `*.py`, `*.yaml`, `*.yml` (excluding `.git/` and `dist/`) and update every hit: paths (`${CLAUDE_PLUGIN_ROOT}/skills/<old>/...`), prose mentions, slash commands, README skills table, permission glob patterns in `.claude-plugin/settings.json` + `suggested-settings.json`.
+4. If the new name is longer, **re-check description lengths** for the renamed skill AND any skill whose description mentions it.
+5. Bump `version` in `.claude-plugin/plugin.json`, run `./pack.sh`, validate, upload.
 
 ### Avoid
 
 - **Never** commit a `TORQUE_API_TOKEN` value to any file.
-- **Don't** copy generic LLM advice into a `torque-*` skill — those skills are about Torque specifics. Generic guidance belongs in `aws-best-practices` / `k8s-operations` / a new generic skill.
 - **Don't** make raw HTTP calls (`curl`, `urllib`, `requests`) from skills. Use `skills/zero-touch-api/scripts/` so auth, host, and error semantics stay centralized. If the endpoint isn't wrapped yet, add a small example script there first.
 - **Don't** add `.DS_Store`, IDE files, or local caches — `.gitignore` excludes them; keep it that way.
 
 ## Testing
 
-Manual: install the plugin locally with `claude plugin install ./`, then trigger each skill via natural-language prompts and run every `/command`. There is no automated test suite yet — adding one is on the roadmap (see `PLAN.md`).
+Manual: build with `./pack.sh`, install via Claude Code CLI or upload to Claude Cowork, then trigger each skill via natural-language prompts and run every slash command. No automated test suite yet.
 
 ## License
 

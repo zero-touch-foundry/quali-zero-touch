@@ -267,9 +267,7 @@ or, naturally:
 
 ## Contributing
 
-Skills under `skills/torque-*` mirror the public [torque-ai-skills repo](https://github.com/QualiTorque) and should stay in sync. Don't fork them here; PR upstream.
-
-Generic skills (`aws-best-practices`, `k8s-operations`) are plugin-local — edit directly.
+All skills are plugin-local — edit directly under `skills/<name>/`. See `AGENTS.md` for skill conventions and the rename checklist.
 
 ## License
 
