@@ -8,7 +8,7 @@ A [Claude Code plugin](https://docs.claude.com/claude-code) for [Quali Torque](h
 
 - **Knowledge skills** (`skills/torque-*`, `skills/aws-*`, `skills/k8s-*`) — auto-triggered by Claude based on the user's intent, matched against each skill's `description`.
 - **User-invocable skills** (`skills/command-*`) — slash-invocable (e.g. `/launch-env`). Same SKILL.md format as knowledge skills; the prefix is a convention, not a runtime requirement. (As of early 2026 Claude Code unified `commands/` into the skills system.)
-- **Torque API integration** (`skills/torque-api/`) — shared Python helper (`torque_api.py`, stdlib only) + per-endpoint example scripts + reference docs. All other skills make Torque REST calls through these scripts; the helper handles auth (`TORQUE_API_TOKEN`), host (`TORQUE_API_HOST`, default `portal.qtorque.io`), and typed error mapping.
+- **Torque API integration** (`skills/zero-touch-api/`) — shared Python helper (`torque_api.py`, stdlib only) + per-endpoint example scripts + reference docs. All other skills make Torque REST calls through these scripts; the helper handles auth (`TORQUE_API_TOKEN`), host (`TORQUE_API_HOST`, default `portal.qtorque.io`), and typed error mapping.
 
 ## Repository layout
 
@@ -18,7 +18,7 @@ A [Claude Code plugin](https://docs.claude.com/claude-code) for [Quali Torque](h
 ├── .github/ISSUE_TEMPLATE/      # GitHub issue templates
 ├── assets/icon.png              # marketplace icon (placeholder)
 └── skills/                      # unified skills directory
-    ├── torque-api/              # shared Torque REST helper + example scripts + references
+    ├── zero-touch-api/          # shared Torque REST helper + example scripts + references
     ├── command-*/SKILL.md       # user-invocable (slash) skills
     └── <other>/SKILL.md         # auto-triggered knowledge skills
 ```
@@ -43,10 +43,10 @@ A [Claude Code plugin](https://docs.claude.com/claude-code) for [Quali Torque](h
 
 ### Torque API access
 
-- Every Torque REST call goes through `skills/torque-api/scripts/torque_api.py` (helper, stdlib only) or one of the per-endpoint example scripts in `skills/torque-api/scripts/examples/`. **No skill calls `curl` or `urllib` directly.**
+- Every Torque REST call goes through `skills/zero-touch-api/scripts/torque_api.py` (helper, stdlib only) or one of the per-endpoint example scripts in `skills/zero-touch-api/scripts/examples/`. **No skill calls `curl` or `urllib` directly.**
 - Auth: helper reads `TORQUE_API_TOKEN` from env. Host: `TORQUE_API_HOST` (default `portal.qtorque.io`). Never commit a token.
-- Endpoint table, response shapes, and error mapping live in `skills/torque-api/references/`.
-- Adding a new Torque API operation = three mechanical steps (row in `endpoints.md`, new example script, reference from consuming skill). Recipe in `skills/torque-api/SKILL.md`.
+- Endpoint table, response shapes, and error mapping live in `skills/zero-touch-api/references/`.
+- Adding a new Torque API operation = three mechanical steps (row in `endpoints.md`, new example script, reference from consuming skill). Recipe in `skills/zero-touch-api/SKILL.md`.
 
 ## When making changes
 
@@ -83,7 +83,7 @@ When a Cowork upload fails opaquely, suspect description length first — `torqu
 
 - **Never** commit a `TORQUE_API_TOKEN` value to any file.
 - **Don't** copy generic LLM advice into a `torque-*` skill — those skills are about Torque specifics. Generic guidance belongs in `aws-best-practices` / `k8s-operations` / a new generic skill.
-- **Don't** make raw HTTP calls (`curl`, `urllib`, `requests`) from skills. Use `skills/torque-api/scripts/` so auth, host, and error semantics stay centralized. If the endpoint isn't wrapped yet, add a small example script there first.
+- **Don't** make raw HTTP calls (`curl`, `urllib`, `requests`) from skills. Use `skills/zero-touch-api/scripts/` so auth, host, and error semantics stay centralized. If the endpoint isn't wrapped yet, add a small example script there first.
 - **Don't** add `.DS_Store`, IDE files, or local caches — `.gitignore` excludes them; keep it that way.
 
 ## Testing

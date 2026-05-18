@@ -4,8 +4,8 @@
     "allow": [
       "Bash(python *torque_api.py:*)",
       "Bash(python3 *torque_api.py:*)",
-      "Bash(python *torque-api/scripts/examples/*)",
-      "Bash(python3 *torque-api/scripts/examples/*)"
+      "Bash(python *zero-touch-api/scripts/examples/*)",
+      "Bash(python3 *zero-touch-api/scripts/examples/*)"
     ]
   }
 }

@@ -17,7 +17,7 @@ body:
         - New slash command
         - Improvement to existing skill
         - Improvement to existing command
-        - New Torque API endpoint wrapper (under skills/torque-api/scripts/examples/)
+        - New Torque API endpoint wrapper (under skills/zero-touch-api/scripts/examples/)
         - Documentation
         - Other
     validations:

@@ -34,7 +34,7 @@ body:
       options:
         - Skill (specify which one in the description)
         - Slash command (specify which one in the description)
-        - torque-api helper / example script
+        - zero-touch-api helper / example script
         - Plugin install / load
         - Documentation
         - Other
