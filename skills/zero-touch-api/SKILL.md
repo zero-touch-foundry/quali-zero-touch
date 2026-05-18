@@ -1,5 +1,5 @@
 ---
-name: torque-api
+name: zero-touch-api
 description: >
   Canonical reference for calling the Torque REST API directly from skills.
   Use this skill whenever another skill needs to fetch from or post to Torque
