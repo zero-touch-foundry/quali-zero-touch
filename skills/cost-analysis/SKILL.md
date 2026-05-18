@@ -17,7 +17,7 @@ description: >
 Estimate and optimize the cost of Torque environments and blueprints. Pair with `aws-best-practices` for
 cloud-side guidance and `torque-blueprint` for YAML-level changes.
 
-**Before running any Torque API helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.**
+**Before running any Torque API helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.**
 
 ---
 
@@ -39,7 +39,7 @@ If unclear, ask before proceeding.
 
 Fetch full env details:
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_environment.py" \
+python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/examples/get_environment.py" \
   --space <SPACE> --id <ENV_ID>
 ```
 From the parsed JSON extract:

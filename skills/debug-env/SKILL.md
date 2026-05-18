@@ -16,17 +16,17 @@ description: >
 
 # Torque Environment Debugger — SKILL.md
 
-**Before running any Torque API helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.**
+**Before running any Torque API helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.**
 
 ## API Reference
 Live Swagger spec (always fetch to check for new endpoints):
 `https://portal.qtorque.io/swagger/latest/swagger.yaml`
 
-**All HTTP calls go through the shared helper** at `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py` (and its example scripts). The helper resolves the token (config file or `TORQUE_API_TOKEN` env), host (config file or `TORQUE_API_HOST` env, default `portal.qtorque.io`), and maps errors. Do NOT call `curl` or `urllib` directly. See `skills/torque-api/SKILL.md` for usage, including the `configure` subcommand for persistent credentials.
+**All HTTP calls go through the shared helper** at `${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py` (and its example scripts). The helper resolves the token (config file or `TORQUE_API_TOKEN` env), host (config file or `TORQUE_API_HOST` env, default `portal.qtorque.io`), and maps errors. Do NOT call `curl` or `urllib` directly. See `skills/zero-touch-api/SKILL.md` for usage, including the `configure` subcommand for persistent credentials.
 
 For one-off calls to endpoints not yet wrapped as example scripts:
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" \
+python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" \
   GET "/settings/environmentfeed?sandbox_id=<env_id>"
 ```
 
@@ -44,7 +44,7 @@ Extract: **hostname**, **space_name**, **environment_id**.
 
 ### Manual fallback
 Ask the user for:
-- **API token** — must be configured before running scripts. Run `python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" configure --show` to check. If not set, see `command-torque-quickstart` (sends user to `<host>/my-token`, writes via `configure --token-stdin`).
+- **API token** — must be configured before running scripts. Run `python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" configure --show` to check. If not set, see `command-torque-quickstart` (sends user to `<host>/my-token`, writes via `configure --token-stdin`).
 - **Space name**
 - **Environment ID**
 - For self-hosted / dedicated tenants: configure the host with `... configure --host "<hostname>"` (or `export TORQUE_API_HOST`).
@@ -57,7 +57,7 @@ Auth + content-type are handled by the helper; you don't set them per call.
 
 ### Call A — Get environment details (primary)
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_environment.py" \
+python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/examples/get_environment.py" \
   --space <space_name> --id <environment_id>
 ```
 Endpoint: `GET /api/spaces/{space_name}/environments/{environment_id}`. The single most important call. Returns overall status, blueprint name, all grain statuses, grain errors, outputs, inputs used.
@@ -75,7 +75,7 @@ Endpoint: `GET /api/spaces/{space_name}/environments/{environment_id}`. The sing
 
 ### Call B — Get activity feed log (secondary, very useful)
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" \
+python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" \
   GET "/settings/environmentfeed?sandbox_id=<environment_id>"
 ```
 Returns array of `EnvironmentFeedResponse` — exactly what the Torque UI shows in the activity/event feed. Contains timestamped events, grain-level log messages, and error details often richer than the grain `errors[]` field alone.
@@ -84,14 +84,14 @@ Returns array of `EnvironmentFeedResponse` — exactly what the Torque UI shows 
 
 ### Call C — Get runner info (if agent/runner issues are suspected)
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" \
+python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" \
   GET "/spaces/<space_name>/environments/runner/<environment_id>"
 ```
 Returns runner pod and agent information. Useful when the error points to the compute layer.
 
 ### Call D — List agents in space (if agent-not-found errors appear)
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" \
+python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" \
   GET "/spaces/<space_name>/agents"
 ```
 Returns all agents associated with the space — confirms whether the agent referenced in the blueprint actually exists and is available.
@@ -250,7 +250,7 @@ Numbered, specific, actionable steps to resolve the issue. Include:
 
 To retry a grain after fixing without restarting the whole environment:
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" \
+python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" \
   POST "/spaces/<space_name>/environments/<environment_id>/reconcile" \
   --body '{"grains":[{"id":"<grain_name>"}]}'
 ```
@@ -262,7 +262,7 @@ Brief tips to avoid recurrence.
 
 ## Step 6 — Handling API Errors
 
-The helper script prints `ERROR HTTP <code>` to stderr on failures. Map them with this table; full reference in `skills/torque-api/references/errors.md`.
+The helper script prints `ERROR HTTP <code>` to stderr on failures. Map them with this table; full reference in `skills/zero-touch-api/references/errors.md`.
 
 | HTTP code | Meaning | Action |
 |---|---|---|

@@ -7,15 +7,14 @@ description: >
   inputs, and common authoring mistakes. Returns annotated YAML with inline
   suggestions and a summary report.
 
-  Use this skill whenever the user asks to review, audit, lint, check, improve,
-  or validate a Torque blueprint YAML. Trigger on phrases like "review my blueprint",
-  "check this YAML", "is this blueprint correct", "what's wrong with this blueprint",
-  "improve this blueprint", "best practices for my blueprint", "does this look right",
-  or "any issues here" in a Torque context. Also trigger when users paste or upload
-  a blueprint and ask for feedback. Complements the server-side blueprint validation
-  endpoint (`POST /spaces/{space}/validations/blueprints`, wrapped by
-  `skills/torque-api/scripts/examples/validate_blueprint.py`) with higher-level
-  design, security, and usability checks.
+  Use this skill when the user asks to review, audit, lint, check, improve, or
+  validate a Torque blueprint YAML. Triggers: "review my blueprint", "check this
+  YAML", "is this blueprint correct", "what's wrong with this blueprint",
+  "improve this blueprint", "best practices for my blueprint", "does this look
+  right", "any issues here" in a Torque context. Also when users paste or upload
+  a blueprint and ask for feedback. Complements server-side validation
+  (`POST /spaces/{space}/validations/blueprints`, wrapped by
+  `validate_blueprint.py`) with higher-level design and security checks.
 ---
 
 # Torque Blueprint Reviewer
@@ -24,7 +23,7 @@ You are reviewing a Torque (Quali) blueprint YAML file. Your job is to perform a
 structured, opinionated review and return actionable feedback the blueprint author
 can act on immediately.
 
-**Before running any Torque API helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.**
+**Before running any Torque API helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.**
 
 ---
 
@@ -34,10 +33,10 @@ The user may:
 - **Paste it inline** or upload a `.yaml` file — use it directly.
 - **Reference a blueprint by name** — ask for space name, blueprint name, and (for external repos) repo + branch, then fetch:
   ```bash
-  python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_blueprint_yaml.py" \
+  python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/examples/get_blueprint_yaml.py" \
     --space <SPACE> --name <BP>            # qtorque built-in repo
   # or, for external repos:
-  python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_blueprint_yaml.py" \
+  python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/examples/get_blueprint_yaml.py" \
     --space <SPACE> --name <BP> --repo <REPO> --branch <BRANCH>
   ```
 - **Ask you to review "my blueprint"** without providing it — ask them to share it.
@@ -92,7 +91,7 @@ Classify each finding into one of three severity levels:
 If the user has provided a space name (or you can infer it), run the server-side validator to catch schema-level errors the structural review might miss:
 
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/validate_blueprint.py" \
+python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/examples/validate_blueprint.py" \
   --space <SPACE> --name <BP> --file <PATH_TO_YAML>
 ```
 
