@@ -1,5 +1,5 @@
 ---
-name: torque-terragrunt-migrate
+name: terragrunt-migrate
 description: "Migrate Terragrunt projects to Quali Torque blueprints. Use when: converting terragrunt.hcl files to Torque, replacing Terragrunt orchestration with Torque grains, mapping dependency blocks to depends-on, converting remote_state to Torque backend, translating generate blocks to provider-overrides, handling run_cmd and complex locals with shell grains, migrating multi-environment Terragrunt folder structures."
 argument-hint: "Describe the Terragrunt config or project structure you want to migrate"
 ---

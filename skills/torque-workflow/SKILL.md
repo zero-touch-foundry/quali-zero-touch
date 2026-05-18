@@ -29,9 +29,9 @@ Workflow files live in either:
 2. Any nested folder under blueprints/
 3. Any folder with a .workflows marker file.
 
-### Greenfield projects — defer to `torque-repo-conventions`
+### Greenfield projects — defer to `repo-conventions`
 
-If you are scaffolding a workflow as part of a brand-new Torque repo, **invoke the `torque-repo-conventions` skill FIRST** to decide where workflows live across the project (typically a dedicated `workflows/` folder with a `.workflows` marker file, kept separate from `blueprints/` for clarity). This skill owns the workflow YAML's internal structure — `torque-repo-conventions` owns the repo-wide layout.
+If you are scaffolding a workflow as part of a brand-new Torque repo, **invoke the `repo-conventions` skill FIRST** to decide where workflows live across the project (typically a dedicated `workflows/` folder with a `.workflows` marker file, kept separate from `blueprints/` for clarity). This skill owns the workflow YAML's internal structure — `repo-conventions` owns the repo-wide layout.
 
 ---
 

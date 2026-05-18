@@ -1,13 +1,13 @@
 {
-  "name": "quali-claude-plugins",
+  "name": "quali-zero-touch",
   "owner": {
     "name": "Quali",
     "url": "https://www.quali.com/"
   },
   "plugins": [
     {
-      "name": "quali-claude-plugin",
-      "source": ".",
+      "name": "zero-touch",
+      "source": "./",
       "description": "Torque DevOps toolkit — blueprint authoring, environment management, governance policies, day-2 workflows, and Terraform/Ansible integrations. Calls the Torque REST API directly (no MCP server required)."
     }
   ]

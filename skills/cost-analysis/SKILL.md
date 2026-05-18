@@ -1,5 +1,5 @@
 ---
-name: torque-cost-analysis
+name: cost-analysis
 description: >
   Use this skill whenever the user wants to estimate, analyze, or optimize the cost of a Torque
   environment or blueprint. Triggers include: "how much does this environment cost",

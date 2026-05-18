@@ -34,11 +34,11 @@ When a Torque environment launches a Terraform grain, the following happens:
 
 ---
 
-## Greenfield projects — defer to `torque-repo-conventions` for repo layout
+## Greenfield projects — defer to `repo-conventions` for repo layout
 
 This skill owns the **internal** structure of a Terraform module folder (`main.tf` / `variables.tf` / `outputs.tf` / `versions.tf` / `README.md`). It does NOT own **where in the repo** that folder lives.
 
-If you are creating a Terraform module from scratch as part of building a new Torque project — i.e. there is no existing repo layout to follow — **invoke the `torque-repo-conventions` skill FIRST** to lock in the canonical location (`terraform/<module-name>/` at repo root), then return here for the module's internal files.
+If you are creating a Terraform module from scratch as part of building a new Torque project — i.e. there is no existing repo layout to follow — **invoke the `repo-conventions` skill FIRST** to lock in the canonical location (`terraform/<module-name>/` at repo root), then return here for the module's internal files.
 
 Do NOT improvise paths like `blueprints/<blueprint-name>/terraform/` — that violates convention and hides reuse.
 

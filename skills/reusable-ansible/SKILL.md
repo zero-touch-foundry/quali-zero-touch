@@ -1,5 +1,5 @@
 ---
-name: torque-ready-ansible
+name: reusable-ansible
 description: "Use this skill whenever the user is writing, reviewing, or refactoring an Ansible playbook that will run inside Torque (Quali Torque). Triggers include: mentions of 'Ansible', 'playbook', 'Torque', 'grain', 'blueprint', 'inventory-file', 'torque.collections', 'export_torque_outputs', 'on-destroy', or requests to make a playbook 'Torque-ready' or 'Torque-compatible'. Also trigger when the user asks about passing variables to Ansible from Torque, dynamic inventory in blueprints, Ansible grain outputs, or teardown playbooks. Use for writing new playbooks, converting existing ones, reviewing playbooks for Torque compatibility, adding outputs, writing teardown playbooks, or structuring playbook directories."
  
 ---
@@ -19,11 +19,11 @@ When a Torque environment launches an Ansible grain, four things happen in order
  
 ---
  
-## Greenfield projects — defer to `torque-repo-conventions` for repo layout
+## Greenfield projects — defer to `repo-conventions` for repo layout
  
 This skill owns the **internal** structure of an Ansible playbook folder (playbook.yml, inventory/, roles/, outputs handling). It does NOT own **where in the repo** that folder lives.
  
-If you are creating a playbook from scratch as part of building a new Torque project — i.e. there is no existing repo layout to follow — **invoke the `torque-repo-conventions` skill FIRST** to lock in the canonical location (`ansible/<playbook-name>/` at repo root), then return here for the playbook's internal files.
+If you are creating a playbook from scratch as part of building a new Torque project — i.e. there is no existing repo layout to follow — **invoke the `repo-conventions` skill FIRST** to lock in the canonical location (`ansible/<playbook-name>/` at repo root), then return here for the playbook's internal files.
  
 Do NOT improvise paths like `blueprints/<blueprint-name>/ansible/` — that violates convention and hides reuse.
  

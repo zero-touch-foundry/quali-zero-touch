@@ -1,5 +1,5 @@
 ---
-name: torque-repo-conventions
+name: repo-conventions
 description: "Use this skill whenever the user is organizing, scaffolding, or restructuring a Torque (Quali Torque) repository — i.e. deciding where blueprints, Terraform modules, Helm charts, Ansible playbooks, shell scripts, workflows, or Rego policies should live within a repo. Triggers include: 'how do I organize my Torque repo', 'Torque project structure', 'where should blueprints live', 'starting a new Torque project', 'Torque repo best practices', 'Torque folder layout', 'set up a Torque monorepo', 'split blueprints across repos', 'Torque repo conventions', 'directory structure for Torque', 'where do I put my Terraform for Torque'. Also trigger PROACTIVELY whenever another Torque skill is about to scaffold new IaC assets and a blueprint together in a greenfield project — invoke this skill BEFORE writing files to lock in the canonical layout. Always use this skill — do NOT improvise folder layouts from memory alone."
 ---
 
@@ -10,7 +10,7 @@ description: "Use this skill whenever the user is organizing, scaffolding, or re
 This skill owns **cross-cutting, repo-wide layout conventions** for Torque projects. It does NOT cover:
 - How to write a blueprint YAML → use `torque-blueprint`
 - How to structure a Terraform module's internal files → use `torque-ready-terraform`
-- How to structure an Ansible playbook's internal files → use `torque-ready-ansible`
+- How to structure an Ansible playbook's internal files → use `reusable-ansible`
 - How to write a workflow YAML → use `torque-workflow`
 - How to write a Rego policy → use `torque-rego`
 
@@ -170,7 +170,7 @@ When asked to scaffold a layout:
 1. Show the proposed directory tree as a code block
 2. Note which files are placeholders vs. fully written
 3. Explicitly call out the `store:` + `path:` mapping the user will need to wire in their blueprint
-4. Cross-reference the relevant per-kind skill (`torque-ready-terraform`, `torque-ready-ansible`, etc.) for the next step
+4. Cross-reference the relevant per-kind skill (`torque-ready-terraform`, `reusable-ansible`, etc.) for the next step
 
 ---
 

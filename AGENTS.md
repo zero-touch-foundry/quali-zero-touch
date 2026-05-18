@@ -31,7 +31,7 @@ A [Claude Code plugin](https://docs.claude.com/claude-code) for [Quali Torque](h
 - Required file: `SKILL.md` with frontmatter `name` and `description`.
 - `description` should be rich with trigger phrases — that's how Claude decides when to invoke the skill.
 - Skills prefixed `torque-*` mirror the public [`torque-ai-skills` repo](https://github.com/QualiTorque) and should stay in sync.  **Don't fork them here — PR upstream.**
-- Generic skills (`aws-best-practices`, `k8s-operations`, `torque-cost-analysis`) are plugin-local — edit directly.
+- Generic skills (`aws-best-practices`, `k8s-operations`, `cost-analysis`) are plugin-local — edit directly.
 - Reference files (`references/foo.md`) are allowed and loaded on demand.
 
 ### Commands

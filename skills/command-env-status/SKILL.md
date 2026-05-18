@@ -18,7 +18,7 @@ Check the health and status of the Torque environment "$ARGUMENTS".
    python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_environment.py" --space <SPACE> --id <ENV_ID>
    ```
 3. From the parsed JSON: report top-level `status`, `blueprint_name`, and iterate `grains[]` — for each grain print `name`, `kind`, `status`, and any `errors[]`.
-4. If any grain is in a failed or degraded state (`Failed`, `Error`, `Deployment_Failed`, `Inactive`), surface its `errors[]` text verbatim. For deeper diagnosis, hand off to `torque-debug-env`.
+4. If any grain is in a failed or degraded state (`Failed`, `Error`, `Deployment_Failed`, `Inactive`), surface its `errors[]` text verbatim. For deeper diagnosis, hand off to `debug-env`.
 5. If Kubernetes tools are available, check pod status and resource utilization for the environment's namespace.
 6. Summarize the overall health in a table: grain name, kind, status, issues.
-7. If there are problems, suggest specific next steps to investigate or resolve them (or invoke `torque-debug-env` directly with the env URL).
+7. If there are problems, suggest specific next steps to investigate or resolve them (or invoke `debug-env` directly with the env URL).

@@ -1,5 +1,5 @@
 ---
-name: torque-debug
+name: debug-env
 description: >
   Use this skill whenever the user wants to debug, investigate, or diagnose a failed, stuck, or
   erroring Torque environment deployment. Triggers include: "my Torque environment failed",

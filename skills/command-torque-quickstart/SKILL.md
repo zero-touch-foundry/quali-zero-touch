@@ -142,7 +142,7 @@ Ask what the user wants to do:
 ## Phase 3C — Debug
 
 1. Ask for the environment URL (encodes space + env ID).
-2. Hand off to `torque-debug-env` skill — it fetches live state, grain status, activity feed.
+2. Hand off to `debug-env` skill — it fetches live state, grain status, activity feed.
 
 ## Phase 4 — Next steps
 
@@ -150,6 +150,6 @@ After the first task, surface 2–3 follow-ups:
 - `/catalog` to discover more blueprints.
 - `torque-workflow` skill for day-2 ops.
 - `torque-rego` skill for governance.
-- `torque-cost-analysis` for spend visibility.
+- `cost-analysis` for spend visibility.
 
 Keep it short. The goal is **one** successful task, not an exhaustive tour.
