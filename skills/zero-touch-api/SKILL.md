@@ -26,7 +26,7 @@ Every Torque-skill in this plugin calls Torque through these scripts. **No raw `
 1. Verify credentials are configured (once per machine — survives Claude Code restarts):
 
    ```bash
-   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" configure --show
+   python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" configure --show
    ```
 
    If nothing's set, the `command-torque-quickstart` skill walks the user through setup (writes the config file with `--token-stdin` so the token never appears in transcript / shell history).
@@ -37,7 +37,7 @@ Every Torque-skill in this plugin calls Torque through these scripts. **No raw `
 5. Run it via Bash — no `export` needed; helper reads the config file:
 
    ```bash
-   python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/get_environments.py" --space my-space
+   python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/examples/get_environments.py" --space my-space
    ```
 
 6. The script prints JSON to stdout on success and `ERROR HTTP <code>` + body to stderr on failure (non-zero exit code).
@@ -48,10 +48,10 @@ Every Torque-skill in this plugin calls Torque through these scripts. **No raw `
 For endpoints not yet wrapped in an example script, call the helper CLI directly:
 
 ```bash
-python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" \
+python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" \
   GET /spaces/my-space/environments
 
-python "${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/torque_api.py" \
+python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" \
   POST /spaces/my-space/validations/blueprints \
   --body '{"blueprintName":"foo","blueprintRaw64":"c3BlY192ZXJzaW9uOiAyCg=="}'
 ```
@@ -112,7 +112,7 @@ If the operation isn't in this table, it isn't wrapped yet — use the helper CL
 ## Files
 
 ```
-skills/torque-api/
+skills/zero-touch-api/
 ├── SKILL.md                          ← this file
 ├── scripts/
 │   ├── torque_api.py                 ← helper. CLI + importable (request, exceptions)
@@ -140,7 +140,7 @@ When the user (or another agent) adds a new endpoint:
 2. Add a row to `references/endpoints.md` with method, path, body / query, and the script filename you'll create.
 3. Add a top-level response shape to `references/response_shapes.md` (truncated example + which fields callers usually parse).
 4. Write `scripts/examples/<verb>_<resource>.py` following the conventions above.
-5. From the consuming skill (or a new one), reference the script with its `${CLAUDE_PLUGIN_ROOT}/skills/torque-api/scripts/examples/...` path.
+5. From the consuming skill (or a new one), reference the script with its `${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/examples/...` path.
 
 No edits to `torque_api.py` are needed unless a new auth mechanism or transport (e.g. SSE) is required.
 

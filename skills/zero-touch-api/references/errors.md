@@ -24,7 +24,7 @@ The helper script (`torque_api.py`) raises typed exceptions and the CLI prints `
 To inspect a raw failing call without changing skill code, run:
 
 ```bash
-python skills/torque-api/scripts/torque_api.py GET /spaces/MYSPACE/environments
+python skills/zero-touch-api/scripts/torque_api.py GET /spaces/MYSPACE/environments
 ```
 
 The CLI prints the parsed body for 2xx and writes `ERROR HTTP <code>` + body to stderr for non-2xx.
