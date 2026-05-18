@@ -1,6 +1,6 @@
 {
   "name": "zero-touch",
-  "version": "0.1.6.5",
+  "version": "0.1.7",
   "description": "Torque DevOps toolkit — blueprint authoring, environment management, and infrastructure automation (Terraform, Ansible, Kubernetes, AWS). Talks to Torque via its REST API (no MCP server required).",
   "author": {
     "name": "Quali",
