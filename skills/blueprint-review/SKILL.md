@@ -1,5 +1,5 @@
 ---
-name: torque-blueprint-reviewer
+name: blueprint-review
 description: >
   Reviews Torque blueprint YAML files for quality, security, and best practices.
   Checks for: missing outputs, incorrect depends-on ordering, hardcoded values

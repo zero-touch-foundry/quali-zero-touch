@@ -15,7 +15,7 @@ description: >
 # Torque Cost Analysis
 
 Estimate and optimize the cost of Torque environments and blueprints. Pair with `aws-best-practices` for
-cloud-side guidance and `torque-blueprint` for YAML-level changes.
+cloud-side guidance and `author-blueprint` for YAML-level changes.
 
 **Before running any Torque API helper script, read `${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.**
 
@@ -121,7 +121,7 @@ After the cost breakdown, offer prioritized cost reductions:
 
 For each suggestion: estimated saving, blueprint YAML change needed, risk level.
 
-When suggesting a YAML change, link to or invoke the `torque-blueprint` skill to actually produce the diff.
+When suggesting a YAML change, link to or invoke the `author-blueprint` skill to actually produce the diff.
 
 ---
 
@@ -153,5 +153,5 @@ Total       $193       $140       -$53  (-27%)
 ## Reference
 
 - AWS Compute Optimizer (right-sizing): https://aws.amazon.com/compute-optimizer/
-- Torque blueprint inputs / outputs: handled by `torque-blueprint` skill.
+- Torque blueprint inputs / outputs: handled by `author-blueprint` skill.
 - AWS Well-Architected cost pillar: handled by `aws-best-practices` skill.

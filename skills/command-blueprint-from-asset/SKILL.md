@@ -50,7 +50,7 @@ Note assets the blueprint will need to expose to users (e.g., region, instance s
 
 ## Step 3 — Generate blueprint
 
-Invoke the `torque-blueprint` skill to produce the YAML. Pass it:
+Invoke the `author-blueprint` skill to produce the YAML. Pass it:
 - The detected grain kind.
 - Extracted inputs (mapped to Torque blueprint inputs with types and defaults).
 - Extracted outputs (mapped to grain outputs + optionally blueprint outputs with `kind: link` for URLs).

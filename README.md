@@ -10,8 +10,8 @@ Claude Code plugin for [Quali Torque](https://www.quali.com/torque/) — environ
 
 | Skill | What it does |
 |-------|--------------|
-| **torque-blueprint** | Create, edit, fix, or review Torque blueprint YAML files — grains, inputs, outputs, dependencies, Liquid templating. |
-| **torque-blueprint-reviewer** | Audit blueprints for quality, security, and best practices. Annotated feedback for missing outputs, incorrect `depends-on`, hardcoded secrets, drift-prone configs. |
+| **author-blueprint** | Create, edit, fix, or review Torque blueprint YAML files — grains, inputs, outputs, dependencies, Liquid templating. |
+| **blueprint-review** | Audit blueprints for quality, security, and best practices. Annotated feedback for missing outputs, incorrect `depends-on`, hardcoded secrets, drift-prone configs. |
 | **torque-workflow** | Create, edit, fix, or review Torque workflow YAML — day-2 ops, env/space scopes, triggers, contract.json, bindings. |
 | **torque-rego** | Write and review Torque OPA/Rego governance policies — environment lifecycle, consumption, Terraform plan control, approval channels. |
 | **debug-env** | Diagnose failed or stuck environments using the Torque REST API — fetches live grain state, activity feed, error logs. Requires a Torque environment URL + API token. |
@@ -30,8 +30,8 @@ These ship as skills under `skills/command-*/` and can be invoked directly with 
 |-------|-------------|
 | `/env-status [name]` | Check a Torque environment's health and grain states. |
 | `/launch-env [blueprint]` | Launch a new environment from a blueprint, interactively gathering inputs. |
-| `/new-blueprint [name]` | Scaffold a new Torque blueprint with the `torque-blueprint` skill. |
-| `/deploy-check [file]` | Pre-deployment validation — server-side blueprint validation (`POST /spaces/{space}/validations/blueprints`) + design review via `torque-blueprint-reviewer`. |
+| `/new-blueprint [name]` | Scaffold a new Torque blueprint with the `author-blueprint` skill. |
+| `/deploy-check [file]` | Pre-deployment validation — server-side blueprint validation (`POST /spaces/{space}/validations/blueprints`) + design review via `blueprint-review`. |
 | `/run-workflow [env] [workflow]` | Run a Torque day-2 workflow on an environment, with input prompting and confirmation. |
 | `/catalog [filter]` | List published blueprints (catalog items) available to launch in the current space. |
 | `/torque-quickstart` | First-time user walkthrough — auth check, space selection, first launch or first blueprint. |

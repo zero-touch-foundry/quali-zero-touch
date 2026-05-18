@@ -14,7 +14,7 @@ Claude Cowork's plugin validator is strict. The local `claude plugin validate` d
 - **`argument-hint` with multiple brackets must be quoted.** `argument-hint: [env] [workflow]` is invalid YAML (two flow sequences in a row). Use `argument-hint: "[env] [workflow]"`. Single `[x]` is valid unquoted.
 - **`name` should equal the folder name.** Mismatches load but feel surprising; keep them aligned.
 
-When a Cowork upload fails opaquely, suspect description length first — `torque-blueprint-reviewer` hit this when `torque-api` (10 chars) → `zero-touch-api` (14 chars) in its description pushed it from 1021 → 1025.
+When a Cowork upload fails opaquely, suspect description length first — `blueprint-review` hit this when `torque-api` (10 chars) → `zero-touch-api` (14 chars) in its description pushed it from 1021 → 1025.
 
 ## Rename / refactor process
 

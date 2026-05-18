@@ -135,7 +135,7 @@ Ask what the user wants to do:
 ## Phase 3B — First blueprint
 
 1. Ask the simplest possible goal: "What's one thing you want to deploy?" (e.g., S3 bucket, EKS cluster, Helm chart).
-2. Confirm whether IaC already exists for it (Terraform module, Helm chart, etc.). If yes, invoke `/blueprint-from-asset <path>`. If no, invoke `torque-blueprint` skill to scaffold from scratch.
+2. Confirm whether IaC already exists for it (Terraform module, Helm chart, etc.). If yes, invoke `/blueprint-from-asset <path>`. If no, invoke `author-blueprint` skill to scaffold from scratch.
 3. Run `/deploy-check` on the result.
 4. Optionally launch with `/launch-env`.
 

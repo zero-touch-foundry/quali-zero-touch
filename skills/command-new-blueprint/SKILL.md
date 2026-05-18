@@ -6,7 +6,7 @@ argument-hint: [blueprint-name]
 
 Help the user create a new Torque blueprint named "$ARGUMENTS".
 
-Read the torque-blueprint skill (at `${CLAUDE_PLUGIN_ROOT}/skills/torque-blueprint/SKILL.md`) before proceeding. **Before running any helper script, also read `${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.**
+Read the author-blueprint skill (at `${CLAUDE_PLUGIN_ROOT}/skills/author-blueprint/SKILL.md`) before proceeding. **Before running any helper script, also read `${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/SKILL.md` (its script manifest is authoritative — never guess script names from patterns) and run the chosen script with `--help` to see its actual arg names.**
 
 Walk through these steps interactively:
 

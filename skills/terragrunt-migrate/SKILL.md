@@ -14,29 +14,29 @@ argument-hint: "Describe the Terragrunt config or project structure you want to 
 - Handling complex Terragrunt patterns: `run_cmd`, dynamic locals, `for_each`, `read_terragrunt_config`
 - Planning a phased migration strategy for large Terragrunt monorepos
 
-## Dependency: torque-blueprint Skill
+## Dependency: author-blueprint Skill
 
-This skill handles **migration workflow and decision-making**. For Torque blueprint syntax, grain types, Liquid templating, and YAML structure, the **torque-blueprint** skill is required.
+This skill handles **migration workflow and decision-making**. For Torque blueprint syntax, grain types, Liquid templating, and YAML structure, the **author-blueprint** skill is required.
 
-**Before starting any migration, resolve the torque-blueprint skill using this procedure:**
+**Before starting any migration, resolve the author-blueprint skill using this procedure:**
 
-1. Search for a skill named **`torque-blueprint`** in the workspace. The agent's skill discovery will check all standard skill locations automatically.
+1. Search for a skill named **`author-blueprint`** in the workspace. The agent's skill discovery will check all standard skill locations automatically.
 2. If found locally, read and load it and proceed.
 3. If **not** found locally, prompt the user for approval before installing:
-   - Ask: *"The **torque-blueprint** skill is required but not found in this workspace. May I install it from https://github.com/QualiTorque/Torque-AI-Skills? (yes/no)"*
+   - Ask: *"The **author-blueprint** skill is required but not found in this workspace. May I install it from https://github.com/QualiTorque/Torque-AI-Skills? (yes/no)"*
    - If the user approves:
      - Fetch raw content from: `https://raw.githubusercontent.com/QualiTorque/Torque-AI-Skills/main/torque-blueprint/SKILL.md`
-     - Save to: `.github/skills/torque-blueprint/SKILL.md`
+     - Save to: `.github/skills/author-blueprint/SKILL.md`
      - Also fetch referenced files from the same repo path and save them alongside it:
-       - `https://raw.githubusercontent.com/QualiTorque/Torque-AI-Skills/main/torque-blueprint/references/grain-types.md` → `.github/skills/torque-blueprint/references/grain-types.md`
-       - `https://raw.githubusercontent.com/QualiTorque/Torque-AI-Skills/main/torque-blueprint/references/terragrunt-migration.md` → `.github/skills/torque-blueprint/references/terragrunt-migration.md`
-     - Confirm: *"torque-blueprint skill installed. Proceeding with migration..."*
+       - `https://raw.githubusercontent.com/QualiTorque/Torque-AI-Skills/main/torque-blueprint/references/grain-types.md` → `.github/skills/author-blueprint/references/grain-types.md`
+       - `https://raw.githubusercontent.com/QualiTorque/Torque-AI-Skills/main/torque-blueprint/references/terragrunt-migration.md` → `.github/skills/author-blueprint/references/terragrunt-migration.md`
+     - Confirm: *"author-blueprint skill installed. Proceeding with migration..."*
      - Load the installed skill and proceed.
      - If the fetch fails (e.g. no network or repo access), inform the user and stop:
-       > *"Could not reach https://github.com/QualiTorque/Torque-AI-Skills. Please install the torque-blueprint skill manually and re-run."*
+       > *"Could not reach https://github.com/QualiTorque/Torque-AI-Skills. Please install the author-blueprint skill manually and re-run."*
    - If the user declines, stop and inform:
-     > *"The torque-blueprint skill is required to proceed. Please install it manually under `.github/skills/torque-blueprint/SKILL.md` and re-run."*
-4. Once loaded, use the torque-blueprint skill for all blueprint syntax questions, grain type specs, and Liquid templating rules.
+     > *"The author-blueprint skill is required to proceed. Please install it manually under `.github/skills/author-blueprint/SKILL.md` and re-run."*
+4. Once loaded, use the author-blueprint skill for all blueprint syntax questions, grain type specs, and Liquid templating rules.
 
 > **Upstream repo:** https://github.com/QualiTorque/Torque-AI-Skills
 

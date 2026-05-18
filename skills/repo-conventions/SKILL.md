@@ -8,7 +8,7 @@ description: "Use this skill whenever the user is organizing, scaffolding, or re
 ## Overview
 
 This skill owns **cross-cutting, repo-wide layout conventions** for Torque projects. It does NOT cover:
-- How to write a blueprint YAML → use `torque-blueprint`
+- How to write a blueprint YAML → use `author-blueprint`
 - How to structure a Terraform module's internal files → use `reusable-terraform`
 - How to structure an Ansible playbook's internal files → use `reusable-ansible`
 - How to write a workflow YAML → use `torque-workflow`

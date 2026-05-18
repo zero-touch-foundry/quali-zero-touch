@@ -59,7 +59,7 @@ Workflows use the same grain kinds as blueprints. Fetch only the docs needed:
 | blueprint | https://docs.qtorque.io/blueprint-designer-guide/blueprints/blueprint-grain |
 
 > For all other YAML rules (grain spec, inputs/outputs, templating, labels, agents, etc.)
-> refer to the `torque-blueprint` skill, which is authoritative for the shared spec.
+> refer to the `author-blueprint` skill, which is authoritative for the shared spec.
 
 ---
 
@@ -157,7 +157,7 @@ A built-in workflow consists of exactly one grain with `built-in: true`. Torque 
 
 ### Launch form customization
 
-Workflows support the same `customization: launch-form: categories:` input grouping as blueprints (see `torque-blueprint` skill for the full categories syntax).
+Workflows support the same `customization: launch-form: categories:` input grouping as blueprints (see `author-blueprint` skill for the full categories syntax).
 
 In addition, workflows support hiding the title step of the launch form:
 

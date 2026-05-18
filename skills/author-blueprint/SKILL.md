@@ -1,5 +1,5 @@
 ---
-name: torque-blueprint
+name: author-blueprint
 description: >
   Use this skill whenever the user wants to create, write, edit, fix, or review a Torque blueprint YAML file.
   Triggers include: "write a Torque blueprint", "create a blueprint for Torque", "blueprint YAML", 

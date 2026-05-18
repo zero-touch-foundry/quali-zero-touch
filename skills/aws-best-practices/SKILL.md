@@ -75,4 +75,4 @@ When configuring Torque grains for AWS:
 - Tag all resources through Torque's auto-tagging for cost allocation.
 - Place Torque agents in private subnets with VPC endpoints for security.
 
-For detailed grain configuration, refer to the torque-blueprints skill.
+For detailed grain configuration, refer to the author-blueprint skill.
