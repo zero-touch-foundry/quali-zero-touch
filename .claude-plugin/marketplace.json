@@ -4,11 +4,13 @@
     "name": "Quali",
     "url": "https://www.quali.com/"
   },
+  "description": "Torque DevOps toolkit — blueprint authoring, environment management, governance policies, day-2 workflows, and Terraform/Ansible integrations. Calls the Torque REST API directly.",
   "plugins": [
     {
       "name": "zero-touch",
       "source": "./",
-      "description": "Torque DevOps toolkit — blueprint authoring, environment management, governance policies, day-2 workflows, and Terraform/Ansible integrations. Calls the Torque REST API directly (no MCP server required)."
+      "license": "MIT",
+      "description": "Torque DevOps toolkit — blueprint authoring, environment management, governance policies, day-2 workflows, and Terraform/Ansible integrations. Calls the Torque REST API directly."
     }
   ]
 }

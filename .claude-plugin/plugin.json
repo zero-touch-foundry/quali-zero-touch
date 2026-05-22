@@ -1,10 +1,12 @@
 {
   "name": "zero-touch",
+  "displayName": "Zero Touch",
   "version": "0.1.7",
-  "description": "Torque DevOps toolkit — blueprint authoring, environment management, and infrastructure automation (Terraform, Ansible, Kubernetes, AWS). Talks to Torque via its REST API (no MCP server required).",
+  "description": "Torque DevOps toolkit — blueprint authoring, environment management, and infrastructure automation (Terraform, Ansible, Kubernetes, AWS). Talks to Torque via its REST API.",
   "author": {
     "name": "Quali",
     "url": "https://www.quali.com/"
   },
-  "keywords": ["devops", "torque", "aws", "kubernetes", "ansible", "terraform", "infrastructure", "iac"]
+  "license": "Apache-2.0",
+  "keywords": ["devops", "torque", "aws", "kubernetes", "ansible", "terraform", "infrastructure", "iac", "azure"]
 }

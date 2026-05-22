@@ -268,7 +268,3 @@ or, naturally:
 ## Contributing
 
 All skills are plugin-local — edit directly under `skills/<name>/`. See `AGENTS.md` for skill conventions and the rename checklist.
-
-## License
-
-Pending — license file will be added before public release.
