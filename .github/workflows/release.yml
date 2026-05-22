@@ -1,0 +1,60 @@
+name: Release plugin
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version from plugin.json
+        id: version
+        run: |
+          VERSION=$(python3 -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['version'])")
+          NAME=$(python3 -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['name'])")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Plugin: $NAME @ $VERSION"
+
+      - name: Fail if tag already exists
+        run: |
+          if git rev-parse "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "::error::Tag ${{ steps.version.outputs.tag }} already exists. Bump version in plugin.json."
+            exit 1
+          fi
+          if gh release view "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "::error::Release ${{ steps.version.outputs.tag }} already exists. Bump version in plugin.json."
+            exit 1
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build plugin zip
+        run: ./pack.sh
+
+      - name: Locate built zip
+        id: zip
+        run: |
+          ZIP="dist/${{ steps.version.outputs.name }}-${{ steps.version.outputs.version }}.zip"
+          test -f "$ZIP" || { echo "::error::Expected $ZIP not found"; ls -la dist/; exit 1; }
+          echo "path=$ZIP" >> "$GITHUB_OUTPUT"
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            "${{ steps.zip.outputs.path }}" \
+            --draft \
+            --title "${{ steps.version.outputs.name }} ${{ steps.version.outputs.version }}" \
+            --notes "Draft release for ${{ steps.version.outputs.name }} v${{ steps.version.outputs.version }}.
+
+          Built from commit ${{ github.sha }} on $(date -u +%Y-%m-%d).
+
+          Edit these notes before publishing."
