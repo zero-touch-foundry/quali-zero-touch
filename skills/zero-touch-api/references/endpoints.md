@@ -19,7 +19,8 @@ Live swagger: <https://portal.qtorque.io/swagger/latest/swagger.yaml>
 | Get blueprint YAML (external repo) | GET | `/spaces/{space}/repositories/{repo}/blueprints/{name}/{branch}/files` | — | `get_blueprint_yaml.py --repo --branch` |
 | Validate blueprint YAML | POST | `/spaces/{space}/validations/blueprints` | `{"blueprintName": "...", "blueprintRaw64": "<base64-yaml>"}` | `validate_blueprint.py` |
 | List catalog items | GET | `/spaces/{space}/catalog` | optional `search`, `only_favorites` | `get_catalog.py` |
-| List environments | GET | `/spaces/{space}/environments` | optional `name`, `status` | `get_environments.py` |
+| List environments (one space, paged) | GET | `/spaces/{space}/environments/v2` | `paging_info.skip`, `paging_info.take`, repeated `status=` | `get_environments.py --space` |
+| List environments (all spaces, paged) | GET | `/operation_hub` | `all=true`, `paging_info.skip`, `paging_info.take`, repeated `status=` | `get_environments.py` (no --space) |
 | Get environment details (for polling, grain status, debug) | GET | `/spaces/{space}/environments/{env_id}` | — | `get_environment.py` |
 | List instantiated workflows on env | GET | `/spaces/{space}/environments/{env_id}/workflows_v2` | — | `get_workflow_instantiations.py` |
 | Launch env from registered blueprint | POST | `/spaces/{space}/environments` | see "Launch env body" below | `launch_env.py --from-registered` |
@@ -37,6 +38,32 @@ Live swagger: <https://portal.qtorque.io/swagger/latest/swagger.yaml>
 | Update env with new IaC | POST | `/spaces/{space}/environments/{env_id}/update_v2` | |
 | Force-terminate stuck env | DELETE | `/spaces/{space}/environments/force/{env_id}` | Irreversible. |
 | Export env-as-code YAML | GET | `/spaces/{space}/environments/{env_id}/eac` | |
+
+## Listing environments — paging & filtering gotchas
+
+Both list endpoints use **skip/take paging with dot-notation keys**, not `page`/`page_size` (those are ignored):
+
+```
+GET /api/operation_hub?all=true
+  &paging_info.skip=0
+  &paging_info.take=50          # max ~50
+  &sort_by=StartTime
+  &sort_by_direction=1
+  &status=Active&status=Launching   # repeated per value
+```
+
+- **Filter param is `status=`** on *both* `/spaces/{space}/environments/v2` and `/operation_hub`. Repeat the key once per value.
+- Valid `status` values: `Active`, `Active With Error`, `Launching`, `Terminating`, `Terminate Failed`, `Ended`, `Force Ended`, `Updating`, `In Progress`, `Failed`, `Success`, `Launch Cancelled`, `N/A`, `Awaiting`, `Scheduled`, `Releasing`, `Importing`.
+- **To paginate**: increment `paging_info.skip` by `take` each iteration; stop when collected count reaches `paging_info.full_count` (in the response). `get_environments.py` does this automatically.
+
+Response shape (operation_hub):
+```json
+{ "environment_list": [...], "paging_info": { "full_count": 245, "requested_page": 1, "total_pages": 25 } }
+```
+
+**The list response has no grain/stage data** — only top-level `current_state` / `errors`. For grain-level errors, do a second call per env: `GET /spaces/{space}/environments/{env_id}`. Extract space + id from the list item at `details.definition.metadata.space_name` and `details.id`.
+
+**Terminate-failed vs current_state mismatch**: an env can match `status=Terminate Failed` in the filter yet show `current_state: active` in detail — termination failed and it's still running. Trust the filter, not `current_state`.
 
 ## Launch env body
 

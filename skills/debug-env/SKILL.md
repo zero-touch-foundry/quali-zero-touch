@@ -32,6 +32,26 @@ python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" \
 
 ---
 
+## Step 0 — Find the Failing Environment (when no ID/URL given)
+
+If the user asks "which envs failed" or doesn't give a specific env, list and filter by status first:
+
+```bash
+# All spaces (cross-account); omit --space to use /operation_hub
+python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/examples/get_environments.py" \
+  --status "Failed,Terminate Failed,Active With Error"
+
+# Single space
+python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/examples/get_environments.py" \
+  --space <space_name> --status "Failed,Active With Error"
+```
+
+The script auto-pages (skip/take). List items carry only top-level state — pull `space_name` from `details.definition.metadata.space_name` and id from `details.id`, then run Step 2 per env. See `zero-touch-api/references/endpoints.md` for the full status enum and paging details.
+
+**Gotcha:** `Terminate Failed` in the filter can coexist with `current_state: active` in the detail — termination failed, env still running. Trust the filter.
+
+---
+
 ## Step 1 — Collect Connection Details
 
 ### Parse from a URL (preferred)
@@ -72,6 +92,14 @@ Endpoint: `GET /api/spaces/{space_name}/environments/{environment_id}`. The sing
   - `errors[]` — per-grain error messages (the most useful field for diagnosis)
   - `progress` — deployment progress percentage
   - `depends_on` / `depends-on` — dependency chain
+
+**Walk grains recursively for the real error.** Grains can be nested. For each grain, scan `state.stages[].activities[]` for entries where `status == "Error"`. Each error activity has:
+- `errors[].message` — short string, often just the command that failed (not the root cause)
+- `log` — a path like `/api/environment/logs/{uuid}`. **This is where the actual error lives.** Fetch it and read the tail (last ~2000–3000 chars) for the real stdout/stderr:
+  ```bash
+  python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" \
+    GET "/environment/logs/<uuid>"
+  ```
 
 ### Call B — Get activity feed log (secondary, very useful)
 ```bash
