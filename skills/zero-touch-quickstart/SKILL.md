@@ -33,23 +33,24 @@ Output is either credentials with the token masked, or a hint that nothing is co
 
 If no token is configured:
 
-1. Determine the portal host first so the token link points to the right place:
-   - Ask: "Are you on Torque SaaS (portal.qtorque.io) or a dedicated / self-hosted tenant?"
-   - SaaS default: `portal.qtorque.io`. For self-hosted, ask for the hostname (no scheme, no path).
+1. Determine the portal host first so the token link points to the right place. Ask which Torque instance they use, offering these options in order:
+   1. **jarvis.qtorque.io**
+   2. **portal.qtorque.io**
+   3. **Self-hosted / other** — ask for the hostname (no scheme, no path).
+
+   For options 1 and 2, the host is the chosen domain. For self-hosted, use the hostname they provide.
 2. Ask: "Do you already have a Torque API token, or do you need to generate one?"
-   - If they need one, send them directly to the **My Token** page on their portal:
-     - SaaS: <https://portal.qtorque.io/my-token>
-     - Self-hosted: `https://<their host>/my-token`
+   - If they need one, send them directly to the **My Token** page on their chosen host: `https://<host>/my-token` (e.g. <https://jarvis.qtorque.io/my-token>, <https://portal.qtorque.io/my-token>).
 
      That page shows the token and lets them copy it in one click. Wait for them to copy it.
 3. Write the credentials to the config file. **Use `--token-stdin` so the token doesn't appear in the bash command (avoids shell history + transcript leakage).** Treat the token as sensitive — never echo it back in subsequent messages.
 
    ```bash
-   # SaaS:
+   # portal.qtorque.io (the helper default — no --host needed):
    printf '%s' "<TOKEN>" | python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" \
      configure --token-stdin
 
-   # Self-hosted (writes both token + host):
+   # Any other host (jarvis.qtorque.io, self-hosted, ... — writes token + host):
    printf '%s' "<TOKEN>" | python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" \
      configure --token-stdin --host "<HOSTNAME>"
    ```
