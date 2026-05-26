@@ -62,6 +62,7 @@ Other ways to set credentials (advanced):
 - To change the host later: `... configure --host "<NEW_HOST>"` (preserves existing token).
 - To rotate the token: re-run the `--token-stdin` command with the new value.
 - To wipe credentials: `... configure --clear`.
+- **Multiple accounts / targets:** if the user has access to more than one account (e.g. a jarvis account *and* a portal account), store each under a named profile and switch between them. The single-token flow above is unchanged — profiles are opt-in. Only set this up when the user asks for a second account. See the `configure --profile` / `--set-default` / `--list` commands and the "Multiple accounts / targets" section in `skills/zero-touch-api/SKILL.md`.
 
 ### Step 1b — Validate live
 

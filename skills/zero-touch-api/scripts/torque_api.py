@@ -4,24 +4,41 @@
 Modes:
   CLI request:   python torque_api.py GET /spaces
                  python torque_api.py POST /spaces/foo/validations/blueprints --body '{...}'
-  CLI configure: python torque_api.py configure --token TOK [--host HOST]
-                 python torque_api.py configure --show
-                 python torque_api.py configure --clear
+  CLI configure: python torque_api.py configure --token TOK [--host HOST] [--profile NAME]
+                 python torque_api.py configure --show | --list
+                 python torque_api.py configure --set-default NAME
+                 python torque_api.py configure --clear [NAME]
   Import:        from torque_api import request, TorqueError
                  data = request("GET", "/spaces")
 
+Profiles (multi-account):
+  An alias names a (token, host) pair. Single-account users never see profiles —
+  the first credential written lands in 'default' and is used automatically.
+  Add more with `configure --profile jarvis ...`; select per call with
+  `--profile` on the helper CLI, or the TORQUE_PROFILE env var (which the example
+  scripts inherit, since they all route through this helper).
+
 Credential resolution order:
-  Token: TORQUE_API_TOKEN env var → config file `token` → error
-  Host:  TORQUE_API_HOST  env var → config file `host`  → portal.qtorque.io
+  Profile: --profile flag → TORQUE_PROFILE env → config `default =` marker
+           → the sole profile → 'default'
+  Token:   TORQUE_API_TOKEN env var → selected profile's `token` → error
+  Host:    TORQUE_API_HOST  env var → selected profile's `host`  → portal.qtorque.io
 
 Config file path (in order):
   $TORQUE_CONFIG_FILE                                          (escape hatch)
   $XDG_CONFIG_HOME/quali-zero-touch/config  or  ~/.config/quali-zero-touch/config  (Unix)
   %APPDATA%\\quali-zero-touch\\config                                (Windows)
 
-Format (INI-ish, no section header):
+Format (sectioned INI; legacy flat files without a section read as 'default'):
+  default = jarvis
+
+  [default]
   token = eyJhbGciOi...
   host  = portal.qtorque.io
+
+  [jarvis]
+  token = eyJ...
+  host  = jarvis.qtorque.io
 
 Paths may be given with or without the leading "/api/" — both work.
 Responses are parsed as JSON when Content-Type allows; otherwise text is returned.
@@ -81,33 +98,93 @@ def _config_path() -> str:
     return os.path.join(base, "quali-zero-touch", "config")
 
 
-def _read_config_file() -> Dict[str, str]:
-    """Parse the config file. Returns {} if missing or unreadable."""
+DEFAULT_PROFILE = "default"
+
+
+def _read_config() -> Dict[str, Any]:
+    """Parse the config file into profiles.
+
+    Returns {"profiles": {name: {"token": ..., "host": ...}}, "default": name}.
+
+    Two on-disk shapes are accepted:
+      * Legacy flat (no section): bare `token = ` / `host = ` lines map to the
+        `default` profile. Existing single-token files keep working untouched.
+      * Sectioned INI: `[alias]` headers, each with its own token/host. A bare
+        `default = <alias>` line (before any section) marks the active profile.
+    """
     path = _config_path()
+    profiles: Dict[str, Dict[str, str]] = {}
+    default_name = ""
     if not os.path.isfile(path):
-        return {}
-    out: Dict[str, str] = {}
+        return {"profiles": profiles, "default": default_name}
+    current = DEFAULT_PROFILE  # bare keys land in 'default'
     try:
         with open(path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith("#"):
                     continue
+                if line.startswith("[") and line.endswith("]"):
+                    current = line[1:-1].strip().lower()
+                    profiles.setdefault(current, {})
+                    continue
                 if "=" not in line:
                     continue
                 k, v = line.split("=", 1)
-                out[k.strip().lower()] = v.strip()
+                k = k.strip().lower()
+                v = v.strip()
+                if k == "default" and current == DEFAULT_PROFILE and not profiles.get(DEFAULT_PROFILE):
+                    # top-level default marker (only meaningful outside a section)
+                    default_name = v.lower()
+                    continue
+                profiles.setdefault(current, {})[k] = v
     except OSError:
-        return {}
-    return out
+        return {"profiles": {}, "default": ""}
+    # drop an empty 'default' profile created by a stray default= marker
+    if DEFAULT_PROFILE in profiles and not profiles[DEFAULT_PROFILE]:
+        del profiles[DEFAULT_PROFILE]
+    return {"profiles": profiles, "default": default_name}
 
 
-def _write_config_file(values: Mapping[str, str]) -> str:
-    """Write config file with chmod 600 on POSIX. Returns path."""
+def _resolve_profile_name(cfg: Mapping[str, Any], requested: str = "") -> str:
+    """Pick which profile to use: explicit → TORQUE_PROFILE env → config default
+    marker → the sole profile → 'default'."""
+    profiles = cfg.get("profiles", {})
+    name = (requested or os.environ.get("TORQUE_PROFILE", "")).strip().lower()
+    if name:
+        return name
+    if cfg.get("default"):
+        return cfg["default"]
+    if len(profiles) == 1:
+        return next(iter(profiles))
+    return DEFAULT_PROFILE
+
+
+def _active_profile(requested: str = "") -> Dict[str, str]:
+    cfg = _read_config()
+    name = _resolve_profile_name(cfg, requested)
+    return cfg.get("profiles", {}).get(name, {})
+
+
+# Set by the CLI (--profile) so imported example scripts inherit the choice.
+_PROFILE_OVERRIDE = ""
+
+
+def _write_config(profiles: Mapping[str, Mapping[str, str]], default_name: str = "") -> str:
+    """Write the sectioned config file with chmod 600 on POSIX. Returns path."""
     path = _config_path()
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    lines = [f"{k} = {v}" for k, v in values.items() if v]
-    text = "\n".join(lines) + "\n"
+    lines = []
+    if default_name:
+        lines.append(f"default = {default_name}")
+        lines.append("")
+    for name, vals in profiles.items():
+        lines.append(f"[{name}]")
+        for k, v in vals.items():
+            if v:
+                lines.append(f"{k} = {v}")
+        lines.append("")
+    text = "\n".join(lines).rstrip("\n") + "\n"
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
@@ -125,7 +202,7 @@ def _host() -> str:
     env = os.environ.get("TORQUE_API_HOST", "").strip()
     if env:
         return env.rstrip("/")
-    cfg = _read_config_file().get("host", "").strip()
+    cfg = _active_profile(_PROFILE_OVERRIDE).get("host", "").strip()
     if cfg:
         return cfg.rstrip("/")
     return DEFAULT_HOST
@@ -134,7 +211,7 @@ def _host() -> str:
 def _token() -> str:
     tok = os.environ.get("TORQUE_API_TOKEN", "").strip()
     if not tok:
-        tok = _read_config_file().get("token", "").strip()
+        tok = _active_profile(_PROFILE_OVERRIDE).get("token", "").strip()
     if not tok:
         raise TorqueAuthError(
             0,
@@ -278,8 +355,22 @@ def _cli_configure(argv: list) -> int:
     )
     p.add_argument("--token", help="Torque API bearer token")
     p.add_argument("--host", help="Torque API hostname (no scheme). Default: portal.qtorque.io")
-    p.add_argument("--show", action="store_true", help="Print current config (token masked) and exit")
-    p.add_argument("--clear", action="store_true", help="Delete the config file and exit")
+    p.add_argument(
+        "--profile",
+        default="",
+        help="Named profile (alias for a token+host pair). Omit to use the default profile. "
+        "Use this to store more than one account/target.",
+    )
+    p.add_argument("--show", action="store_true", help="Print current config (tokens masked) and exit")
+    p.add_argument("--list", action="store_true", help="List configured profiles and exit")
+    p.add_argument("--set-default", metavar="PROFILE", help="Mark a profile as the default and exit")
+    p.add_argument(
+        "--clear",
+        nargs="?",
+        const="\0ALL",
+        metavar="PROFILE",
+        help="Delete a profile, or the whole config file if no profile given",
+    )
     p.add_argument(
         "--token-stdin",
         action="store_true",
@@ -288,24 +379,69 @@ def _cli_configure(argv: list) -> int:
     args = p.parse_args(argv)
 
     path = _config_path()
+    cfg = _read_config()
+    profiles: Dict[str, Dict[str, str]] = cfg["profiles"]
+    default_name = cfg["default"]
 
-    if args.clear:
-        if os.path.isfile(path):
-            os.remove(path)
-            print(f"Removed {path}")
-        else:
-            print(f"No config file at {path}")
+    if args.set_default:
+        name = args.set_default.strip().lower()
+        if name not in profiles:
+            print(f"No such profile: {name}. Configured: {', '.join(profiles) or '(none)'}", file=sys.stderr)
+            return 2
+        _write_config(profiles, name)
+        print(f"Default profile set to '{name}'.")
+        return 0
+
+    if args.clear is not None:
+        if args.clear == "\0ALL":
+            if os.path.isfile(path):
+                os.remove(path)
+                print(f"Removed {path}")
+            else:
+                print(f"No config file at {path}")
+            return 0
+        name = args.clear.strip().lower()
+        if name not in profiles:
+            print(f"No such profile: {name}", file=sys.stderr)
+            return 2
+        del profiles[name]
+        if default_name == name:
+            default_name = ""
+        _write_config(profiles, default_name)
+        print(f"Removed profile '{name}'.")
+        return 0
+
+    if args.list:
+        print(f"Config file: {path}")
+        if not profiles:
+            print("  (no profiles configured)")
+        active = _resolve_profile_name(cfg)
+        for name, vals in profiles.items():
+            marks = []
+            if name == default_name:
+                marks.append("default")
+            if name == active:
+                marks.append("active")
+            suffix = f"  [{', '.join(marks)}]" if marks else ""
+            print(f"  {name}: host={vals.get('host') or DEFAULT_HOST}{suffix}")
         return 0
 
     if args.show:
-        cfg = _read_config_file()
+        active = _resolve_profile_name(cfg)
+        vals = profiles.get(active, {})
         print(f"Config file: {path}")
-        print(f"  token = {_mask_token(cfg.get('token', ''))}")
-        print(f"  host  = {cfg.get('host', '') or DEFAULT_HOST + ' (default)'}")
+        print(f"  profile = {active}" + (" (default)" if active == default_name else ""))
+        print(f"  token   = {_mask_token(vals.get('token', ''))}")
+        print(f"  host    = {vals.get('host', '') or DEFAULT_HOST + ' (default)'}")
+        if len(profiles) > 1:
+            print(f"  (other profiles: {', '.join(n for n in profiles if n != active)})")
         env_tok = os.environ.get("TORQUE_API_TOKEN", "")
         env_host = os.environ.get("TORQUE_API_HOST", "")
-        if env_tok or env_host:
+        env_prof = os.environ.get("TORQUE_PROFILE", "")
+        if env_tok or env_host or env_prof:
             print("Env overrides (take precedence):")
+            if env_prof:
+                print(f"  TORQUE_PROFILE   = {env_prof}")
             if env_tok:
                 print(f"  TORQUE_API_TOKEN = {_mask_token(env_tok)}")
             if env_host:
@@ -319,18 +455,25 @@ def _cli_configure(argv: list) -> int:
         print("Nothing to write. Provide --token / --token-stdin and/or --host.", file=sys.stderr)
         return 2
 
-    existing = _read_config_file()
-    new = dict(existing)
+    # Which profile are we writing to? Explicit --profile, else the resolved
+    # default. First-ever write with no --profile lands in 'default'.
+    target = (args.profile or "").strip().lower() or _resolve_profile_name(cfg)
+    entry = dict(profiles.get(target, {}))
     if token:
-        new["token"] = token
+        entry["token"] = token
     if args.host:
-        new["host"] = args.host.strip().rstrip("/")
-    written = _write_config_file(new)
+        entry["host"] = args.host.strip().rstrip("/")
+    profiles[target] = entry
+    # First profile written becomes the default automatically.
+    if not default_name:
+        default_name = target
+    written = _write_config(profiles, default_name)
     print(f"Wrote {written}")
-    if "token" in new:
-        print(f"  token = {_mask_token(new['token'])}")
-    if "host" in new:
-        print(f"  host  = {new['host']}")
+    print(f"  profile = {target}" + (" (default)" if target == default_name else ""))
+    if "token" in entry:
+        print(f"  token   = {_mask_token(entry['token'])}")
+    if "host" in entry:
+        print(f"  host    = {entry['host']}")
     return 0
 
 
@@ -351,11 +494,21 @@ def _cli_request(argv: list) -> int:
     )
     p.add_argument("--timeout", type=float, default=60.0)
     p.add_argument(
+        "--profile",
+        default="",
+        help="Use a named credential profile (set via `configure --profile`). "
+        "Omit to use the default profile.",
+    )
+    p.add_argument(
         "--raw",
         action="store_true",
         help="Print response without pretty-printing",
     )
     args = p.parse_args(argv)
+
+    if args.profile:
+        global _PROFILE_OVERRIDE
+        _PROFILE_OVERRIDE = args.profile.strip().lower()
 
     body: Any = None
     if args.body is not None:

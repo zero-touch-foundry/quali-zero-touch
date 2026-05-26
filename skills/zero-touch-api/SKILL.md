@@ -60,8 +60,9 @@ python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" \
 ```
 
 The helper:
-- resolves token via `TORQUE_API_TOKEN` env → config file `token`,
-- resolves host via `TORQUE_API_HOST` env → config file `host` → `portal.qtorque.io`,
+- selects a credential **profile**: `--profile` flag → `TORQUE_PROFILE` env → config `default =` marker → the sole profile → `default`,
+- resolves token via `TORQUE_API_TOKEN` env → selected profile's `token`,
+- resolves host via `TORQUE_API_HOST` env → selected profile's `host` → `portal.qtorque.io`,
 - auto-prepends `/api/` to the path (write `/spaces`, not `/api/spaces`),
 - maps 401/403/404/422 to typed exceptions / stderr messages.
 
@@ -70,10 +71,10 @@ The helper:
 Manage the config file (`~/.config/quali-zero-touch/config` on Unix, `%APPDATA%\quali-zero-touch\config` on Windows, `chmod 600`):
 
 ```bash
-# Show current state (token masked)
+# Show current state (active profile, token masked)
 ... torque_api.py configure --show
 
-# Write token via stdin (avoids shell history / transcript leak)
+# Write token via stdin (avoids shell history / transcript leak) — default profile
 printf '%s' "$TOKEN" | ... torque_api.py configure --token-stdin
 
 # Set self-hosted host
@@ -82,11 +83,37 @@ printf '%s' "$TOKEN" | ... torque_api.py configure --token-stdin
 # Both at once
 printf '%s' "$TOKEN" | ... torque_api.py configure --token-stdin --host tenant.example.com
 
-# Wipe credentials
+# Wipe everything
 ... torque_api.py configure --clear
 ```
 
 Skills writing the token should always use `--token-stdin` and pipe via `printf '%s' "<TOKEN>"` — never put the raw token in argv.
+
+#### Multiple accounts / targets (profiles)
+
+A **profile** is an alias for one (token, host) pair. Single-account users never touch this — the first credential written lands in `default` and is used automatically. Add more only when the user wants a second account/target (e.g. a jarvis account alongside portal):
+
+```bash
+# Add a named profile (own token + host)
+printf '%s' "$TOKEN" | ... torque_api.py configure --token-stdin --profile jarvis --host jarvis.qtorque.io
+
+# List profiles (marks default + active)
+... torque_api.py configure --list
+
+# Change which profile bare calls use
+... torque_api.py configure --set-default jarvis
+
+# Use a specific profile for one call (helper CLI)
+... torque_api.py --profile jarvis GET /spaces
+
+# ...or for an example script (route via env — scripts have no --profile flag)
+TORQUE_PROFILE=jarvis python .../examples/get_spaces.py --names-only
+
+# Remove one profile (keeps the rest)
+... torque_api.py configure --clear jarvis
+```
+
+When the user phrases intent per-account ("how many spaces on my **jarvis** account"), map the account name to a profile: select it with `--profile jarvis` (helper CLI) or `TORQUE_PROFILE=jarvis` (example scripts). If no such profile exists yet, offer to add it via `configure --profile`.
 
 ## Script manifest
 
@@ -153,8 +180,9 @@ Default storage is the config file (managed via `configure` subcommand above). E
 
 | Var | Purpose | Default |
 |---|---|---|
-| `TORQUE_API_TOKEN` | Bearer token. Overrides config file `token`. | — |
-| `TORQUE_API_HOST` | Hostname only (no scheme, no path). Overrides config file `host`. | `portal.qtorque.io` |
+| `TORQUE_PROFILE` | Select a credential profile by name (example scripts inherit this). | config `default` marker |
+| `TORQUE_API_TOKEN` | Bearer token. Overrides the selected profile's `token`. | — |
+| `TORQUE_API_HOST` | Hostname only (no scheme, no path). Overrides the selected profile's `host`. | `portal.qtorque.io` |
 | `TORQUE_CONFIG_FILE` | Override config file path (escape hatch). | OS default (see below) |
 | `HTTPS_PROXY` / `HTTP_PROXY` | Honored automatically by `urllib`. | — |
 
@@ -162,10 +190,17 @@ Config file path:
 - Linux/macOS: `$XDG_CONFIG_HOME/quali-zero-touch/config` (else `~/.config/quali-zero-touch/config`)
 - Windows: `%APPDATA%\quali-zero-touch\config`
 
-Format (INI-ish, no section header):
+Format (sectioned INI). A legacy flat file with no section header still works — its bare keys read as the `default` profile.
 ```
+default = jarvis
+
+[default]
 token = eyJhbGciOi...
 host  = portal.qtorque.io
+
+[jarvis]
+token = eyJ...
+host  = jarvis.qtorque.io
 ```
 
 ## Silencing per-call permission prompts
