@@ -23,13 +23,16 @@ Every Torque-skill in this plugin calls Torque through these scripts. **No raw `
 
 ## Quick start (when invoking from another skill)
 
-1. Verify credentials are configured (once per machine — survives Claude Code restarts):
+1. **MANDATORY credential gate — run this BEFORE the first Torque API call, every session, regardless of what the user asked for.** Do not run any example/helper script until this passes. Even if the user's first request is "how many spaces do I have", check credentials first; do not call a script and react to a 401.
 
    ```bash
    python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" configure --show
    ```
 
-   If nothing's set, the `zero-touch-quickstart` skill walks the user through setup (writes the config file with `--token-stdin` so the token never appears in transcript / shell history).
+   - **Credentials present** (masked token shown) → proceed to step 2.
+   - **Nothing configured** → **invoke the `zero-touch-quickstart` skill's setup (Phase 1)** to collect host + token and persist them. Do NOT improvise your own token prompt and pass the token inline — that leaks it into the transcript and does not persist, so the next session fails the same way. Quickstart is the single source of truth for the persist mechanics (`configure --token-stdin`, host handling, `chmod 600` config file). After quickstart setup completes, re-run `configure --show` to confirm, then continue with the user's original request.
+
+   This gate exists because users invoke task skills directly (e.g. "list my spaces") without running quickstart first. The gate makes setup happen once and persist — not get re-improvised on every cold start.
 
 2. **Pick the right script from the "Script manifest" table below.** Do not guess script names from filename patterns — the manifest is authoritative.
 3. **Always run the chosen script with `--help` first** to see its exact arg names, defaults, and behavior. Skip this step and you will hallucinate flags that don't exist.

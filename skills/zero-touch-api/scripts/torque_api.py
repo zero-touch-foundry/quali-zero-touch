@@ -139,8 +139,11 @@ def _token() -> str:
         raise TorqueAuthError(
             0,
             None,
-            "Torque API token not configured. Set TORQUE_API_TOKEN env var, or run: "
-            "`python torque_api.py configure --token <YOUR_TOKEN>`",
+            "Torque API token not configured. Run the credential gate before any "
+            "API call: invoke the `zero-touch-quickstart` skill to collect and "
+            "persist a token (writes the config file via `configure --token-stdin`). "
+            "Do not pass a token inline per call — it won't persist and leaks into "
+            "the transcript. Check state with `torque_api.py configure --show`.",
         )
     return tok
 
