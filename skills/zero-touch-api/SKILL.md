@@ -30,9 +30,18 @@ Every Torque-skill in this plugin calls Torque through these scripts. **No raw `
    ```
 
    - **Credentials present** (masked token shown) → proceed to step 2.
-   - **Nothing configured** → **invoke the `zero-touch-quickstart` skill's setup (Phase 1)** to collect host + token and persist them. Do NOT improvise your own token prompt and pass the token inline — that leaks it into the transcript and does not persist, so the next session fails the same way. Quickstart is the single source of truth for the persist mechanics (`configure --token-stdin`, host handling, `chmod 600` config file). After quickstart setup completes, re-run `configure --show` to confirm, then continue with the user's original request.
+   - **Nothing configured** → **actually call the `Skill` tool with `zero-touch-quickstart`** (Phase 1 setup). This is a real tool call, not a paraphrase: do NOT hand-roll your own token prompt / host form. A hand-rolled form gets the host list and my-token link wrong (this is exactly the bug that shipped a portal-only form). Quickstart is the single source of truth for setup — token persistence via `configure --token-stdin`, host handling, `chmod 600`. After it completes, re-run `configure --show` to confirm, then continue with the user's original request.
+
+   **If — and only if — the `Skill` tool is unavailable** and you must collect credentials inline, mirror quickstart exactly. Ask which host, offering these options **in this order**:
+   1. **jarvis.qtorque.io**
+   2. **portal.qtorque.io**
+   3. **Self-hosted / other** — ask for the hostname.
+
+   My-token link is `https://<chosen-host>/my-token` (e.g. `https://jarvis.qtorque.io/my-token`) — never hardcode portal. Persist with `configure --token-stdin` (add `--host <host>` for anything other than portal.qtorque.io). Never pass the token inline per call.
 
    This gate exists because users invoke task skills directly (e.g. "list my spaces") without running quickstart first. The gate makes setup happen once and persist — not get re-improvised on every cold start.
+
+   > The host list above is a mirror of `zero-touch-quickstart` Step 1a — keep the two in sync if either changes.
 
 2. **Pick the right script from the "Script manifest" table below.** Do not guess script names from filename patterns — the manifest is authoritative.
 3. **Always run the chosen script with `--help` first** to see its exact arg names, defaults, and behavior. Skip this step and you will hallucinate flags that don't exist.
