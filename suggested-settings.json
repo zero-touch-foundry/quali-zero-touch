@@ -1,5 +1,5 @@
 {
-  "_comment": "Suggested Claude Code permission allowlist for the quali-claude-plugin. Merge the `permissions.allow` entries into your project's .claude/settings.local.json (or run /zero-touch-quickstart and let the skill do it for you). The `configure --token-stdin` invocation is intentionally NOT included — credential writes should stay human-in-the-loop.",
+  "_comment": "Suggested Claude Code permission allowlist for the quali-zero-touch. Merge the `permissions.allow` entries into your project's .claude/settings.local.json (or run /zero-touch-quickstart and let the skill do it for you). The `configure --token-stdin` invocation is intentionally NOT included — credential writes should stay human-in-the-loop.",
   "permissions": {
     "allow": [
       "Bash(python *torque_api.py:*)",

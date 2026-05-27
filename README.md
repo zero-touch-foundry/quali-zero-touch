@@ -57,7 +57,7 @@ To extend with a new Torque API operation, see `skills/zero-touch-api/SKILL.md` 
 
 ### Prerequisites
 
-- [Claude Code](https://docs.claude.com/claude-code) installed
+- [Claude Code](https://docs.claude.com/claude-code) installed (can also be the claude desktop app, using cowork and/or code)
 - A Torque account with API access — token obtained from the Torque portal (see below)
 - Python 3.8+ on `PATH` (helper scripts are stdlib only — no `pip install` needed)
 
@@ -125,7 +125,7 @@ The plugin runs Python helper scripts via Bash. By default Claude Code asks the 
 2. **Manually** — copy `suggested-settings.json` (shipped at the plugin root) into your project's `.claude/settings.local.json`:
 
    ```bash
-   cat "$(claude plugin path quali-claude-plugin)/suggested-settings.json"
+   cat "$(claude plugin path quali-zero-touch)/suggested-settings.json"
    # then merge the permissions.allow array into .claude/settings.local.json
    ```
 
@@ -151,8 +151,8 @@ This plugin is not yet on the Anthropic marketplace. Three local-install options
 **Option 1 — session-scoped (fastest for testing)**
 
 ```bash
-git clone <repo-url> quali-claude-plugin
-cd quali-claude-plugin
+git clone <repo-url> quali-zero-touch
+cd quali-zero-touch
 claude --plugin-dir .
 ```
 
@@ -161,9 +161,9 @@ The plugin loads for that session only.
 **Option 2 — zip-based**
 
 ```bash
-cd quali-claude-plugin
+cd quali-zero-touch
 ./pack.sh
-claude --plugin-dir dist/quali-claude-plugin-0.1.0.zip
+claude --plugin-dir dist/zero-touch-0.1.0.zip
 ```
 
 **Option 3 — persistent via a local marketplace**
@@ -172,7 +172,7 @@ See the [Claude Desktop install section](#install-in-claude-desktop) for marketp
 
 ```bash
 /plugin marketplace add ~/quali-local
-/plugin install quali-claude-plugin@quali-local
+/plugin install quali-zero-touch@quali-local
 ```
 
 (Marketplace installation instructions for the public Anthropic marketplace will be added when published.)
@@ -189,7 +189,7 @@ Claude Desktop's **Code** tab hosts the full Claude Code runtime — plugins, sl
 ./pack.sh
 ```
 
-Produces `dist/quali-claude-plugin-<version>.zip`.
+Produces `dist/quali-zero-touch-<version>.zip`.
 
 **Step 2 — upload in the Code tab**
 

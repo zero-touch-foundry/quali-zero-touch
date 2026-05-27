@@ -2,7 +2,7 @@
 # pack.sh — bundle this plugin into a distributable zip.
 #
 # Usage:
-#   ./pack.sh                    # writes dist/quali-claude-plugin-<version>.zip
+#   ./pack.sh                    # writes dist/quali-zero-touch-<version>.zip
 #   ./pack.sh --output /tmp/x.zip
 #   ./pack.sh --name custom-name
 #
