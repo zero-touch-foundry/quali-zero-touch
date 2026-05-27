@@ -54,7 +54,14 @@ A [Claude Code plugin](https://docs.claude.com/claude-code) for [Quali Torque](h
 2. Write the `description` field with many trigger phrases — invocation is description-driven.
 3. If slash-invocable, add `argument-hint:` frontmatter.
 4. Structure the body in clear numbered steps. Include best practices and "never do" lists where applicable.
-5. Add a row to the README's Skills table.
+5. **Document it in `README.md` — this is mandatory, not optional. The README is the only user-facing skill inventory; an undocumented skill is effectively invisible.**
+   - Knowledge / auto-triggered skill → add a row to the **Skills** table.
+   - Slash-invocable skill (has `argument-hint:` frontmatter) → add a row to the **Commands (user-invocable skills)** table, using `/skill-name [arg]`.
+   - A skill can warrant both (e.g. a knowledge skill that's also `/`-callable).
+6. Sanity check before committing: every dir under `skills/` should appear in README. Quick audit —
+   ```bash
+   for d in skills/*/; do s=$(basename "$d"); grep -q "$s" README.md || echo "MISSING from README: $s"; done
+   ```
 
 ### SKILL.md frontmatter gotchas
 

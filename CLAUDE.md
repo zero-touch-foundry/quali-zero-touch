@@ -16,6 +16,10 @@ Claude Cowork's plugin validator is strict. The local `claude plugin validate` d
 
 When a Cowork upload fails opaquely, suspect description length first — `blueprint-review` hit this when `torque-api` (10 chars) → `zero-touch-api` (14 chars) in its description pushed it from 1021 → 1025.
 
+## Adding a skill
+
+When you add a skill, you MUST also document it in `README.md` (Skills table for knowledge skills, Commands table for `/`-invocable ones). The README is the only user-facing inventory. See the full "Adding a new skill" checklist + audit one-liner in `AGENTS.md`.
+
 ## Rename / refactor process
 
 Cowork caches by plugin name + version. After a failed upload:

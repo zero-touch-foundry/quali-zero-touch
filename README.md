@@ -1,8 +1,6 @@
-# quali-claude-plugin
+# quali-zero-touch
 
-Claude Code plugin for [Quali Torque](https://www.quali.com/torque/) — environment-as-a-service for cloud infrastructure. Author blueprints, write governance policies, debug environments, migrate Terragrunt, and integrate Terraform/Ansible — all from Claude.
-
-> **Note**: plugin name (`quali-claude-plugin`) is provisional and may change before marketplace publication.
+Quali Zero Touch is a Claude Code/Cowork plugin for [Quali Torque](https://www.quali.com/torque/) — environment-as-a-service for cloud infrastructure. Author blueprints, write governance policies, debug environments, migrate Terragrunt, and integrate Terraform/Ansible — all from Claude.
 
 ## Components
 
@@ -20,7 +18,9 @@ Claude Code plugin for [Quali Torque](https://www.quali.com/torque/) — environ
 | **terragrunt-migrate** | Migrate Terragrunt projects to Torque blueprints — dependency blocks → `depends-on`, remote_state → Torque backend, generate blocks → provider-overrides. |
 | **cost-analysis** | Estimate and optimize Torque environment / blueprint cost — per-grain breakdown, right-sizing suggestions, before/after comparisons. |
 | **aws-best-practices** | AWS architecture, IAM, cost optimization, security hardening — Well-Architected guidance tailored to Torque workloads. |
+| **azure-best-practices** | Azure architecture, RBAC, cost optimization, security hardening — Well-Architected guidance for Azure-targeting Torque grains (Terraform, ARM, Ansible). |
 | **k8s-operations** | Kubernetes troubleshooting, manifest authoring, cluster management — useful when investigating Torque Helm/K8s grains. |
+| **repo-conventions** | Canonical Torque repo layout — where blueprints, Terraform/Helm/Ansible assets, workflows, and Rego policies live. Auto-triggers before scaffolding a greenfield project. |
 
 ### Commands (user-invocable skills)
 
@@ -36,6 +36,7 @@ These ship as skills under `skills/<skill>/` and can be invoked directly with `/
 | `/catalog [filter]` | List published blueprints (catalog items) available to launch in the current space. |
 | `/zero-touch-quickstart` | First-time user walkthrough — auth check, space selection, first launch or first blueprint. |
 | `/blueprint-from-asset [path]` | Scaffold a Torque blueprint from an existing IaC asset (Terraform, OpenTofu, Helm, Ansible, K8s, CloudFormation, Terragrunt). Auto-detects type. |
+| `/terragrunt-migrate` | Migrate a Terragrunt project to Torque blueprints — dependency blocks → `depends-on`, remote_state → backend, generate blocks → provider-overrides. |
 
 ### Torque API integration
 
