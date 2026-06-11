@@ -34,13 +34,13 @@ Output is either credentials with the token masked, or a hint that nothing is co
 If no token is configured:
 
 1. Determine the portal host first so the token link points to the right place. Ask which Torque instance they use, offering these options in order:
-   1. **jarvis.qtorque.io**
+   1. **stackautomation.cisco.com**
    2. **portal.qtorque.io**
    3. **Self-hosted / other** — ask for the hostname (no scheme, no path).
 
    For options 1 and 2, the host is the chosen domain. For self-hosted, use the hostname they provide.
 2. Ask: "Do you already have a Torque API token, or do you need to generate one?"
-   - If they need one, send them directly to the **My Token** page on their chosen host: `https://<host>/my-token` (e.g. <https://jarvis.qtorque.io/my-token>, <https://portal.qtorque.io/my-token>).
+   - If they need one, send them directly to the **My Token** page on their chosen host: `https://<host>/my-token` (e.g. <https://stackautomation.cisco.com/my-token>, <https://portal.qtorque.io/my-token>).
 
      That page shows the token and lets them copy it in one click. Wait for them to copy it.
 3. Write the credentials to the config file. **Use `--token-stdin` so the token doesn't appear in the bash command (avoids shell history + transcript leakage).** Treat the token as sensitive — never echo it back in subsequent messages.
@@ -50,7 +50,7 @@ If no token is configured:
    printf '%s' "<TOKEN>" | python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" \
      configure --token-stdin
 
-   # Any other host (jarvis.qtorque.io, self-hosted, ... — writes token + host):
+   # Any other host (stackautomation.cisco.com, self-hosted, ... — writes token + host):
    printf '%s' "<TOKEN>" | python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" \
      configure --token-stdin --host "<HOSTNAME>"
    ```
@@ -62,7 +62,7 @@ Other ways to set credentials (advanced):
 - To change the host later: `... configure --host "<NEW_HOST>"` (preserves existing token).
 - To rotate the token: re-run the `--token-stdin` command with the new value.
 - To wipe credentials: `... configure --clear`.
-- **Multiple accounts / targets:** if the user has access to more than one account (e.g. a jarvis account *and* a portal account), store each under a named profile and switch between them. The single-token flow above is unchanged — profiles are opt-in. Only set this up when the user asks for a second account. See the `configure --profile` / `--set-default` / `--list` commands and the "Multiple accounts / targets" section in `skills/zero-touch-api/SKILL.md`.
+- **Multiple accounts / targets:** if the user has access to more than one account (e.g. a Stack Automation account *and* a portal account), store each under a named profile and switch between them. The single-token flow above is unchanged — profiles are opt-in. Only set this up when the user asks for a second account. See the `configure --profile` / `--set-default` / `--list` commands and the "Multiple accounts / targets" section in `skills/zero-touch-api/SKILL.md`.
 
 ### Step 1b — Validate live
 

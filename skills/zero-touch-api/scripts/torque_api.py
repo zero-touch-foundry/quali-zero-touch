@@ -14,7 +14,7 @@ Modes:
 Profiles (multi-account):
   An alias names a (token, host) pair. Single-account users never see profiles —
   the first credential written lands in 'default' and is used automatically.
-  Add more with `configure --profile jarvis ...`; select per call with
+  Add more with `configure --profile stackautomation ...`; select per call with
   `--profile` on the helper CLI, or the TORQUE_PROFILE env var (which the example
   scripts inherit, since they all route through this helper).
 
@@ -30,15 +30,15 @@ Config file path (in order):
   %APPDATA%\\quali-zero-touch\\config                                (Windows)
 
 Format (sectioned INI; legacy flat files without a section read as 'default'):
-  default = jarvis
+  default = stackautomation
 
   [default]
   token = eyJhbGciOi...
   host  = portal.qtorque.io
 
-  [jarvis]
+  [stackautomation]
   token = eyJ...
-  host  = jarvis.qtorque.io
+  host  = stackautomation.cisco.com
 
 Paths may be given with or without the leading "/api/" — both work.
 Responses are parsed as JSON when Content-Type allows; otherwise text is returned.

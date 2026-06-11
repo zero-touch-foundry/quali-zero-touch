@@ -33,11 +33,11 @@ Every Torque-skill in this plugin calls Torque through these scripts. **No raw `
    - **Nothing configured** → **actually call the `Skill` tool with `zero-touch-quickstart`** (Phase 1 setup). This is a real tool call, not a paraphrase: do NOT hand-roll your own token prompt / host form. A hand-rolled form gets the host list and my-token link wrong (this is exactly the bug that shipped a portal-only form). Quickstart is the single source of truth for setup — token persistence via `configure --token-stdin`, host handling, `chmod 600`. After it completes, re-run `configure --show` to confirm, then continue with the user's original request.
 
    **If — and only if — the `Skill` tool is unavailable** and you must collect credentials inline, mirror quickstart exactly. Ask which host, offering these options **in this order**:
-   1. **jarvis.qtorque.io**
+   1. **stackautomation.cisco.com**
    2. **portal.qtorque.io**
    3. **Self-hosted / other** — ask for the hostname.
 
-   My-token link is `https://<chosen-host>/my-token` (e.g. `https://jarvis.qtorque.io/my-token`) — never hardcode portal. Persist with `configure --token-stdin` (add `--host <host>` for anything other than portal.qtorque.io). Never pass the token inline per call.
+   My-token link is `https://<chosen-host>/my-token` (e.g. `https://stackautomation.cisco.com/my-token`) — never hardcode portal. Persist with `configure --token-stdin` (add `--host <host>` for anything other than portal.qtorque.io). Never pass the token inline per call.
 
    This gate exists because users invoke task skills directly (e.g. "list my spaces") without running quickstart first. The gate makes setup happen once and persist — not get re-improvised on every cold start.
 
@@ -100,29 +100,29 @@ Skills writing the token should always use `--token-stdin` and pipe via `printf 
 
 #### Multiple accounts / targets (profiles)
 
-A **profile** is an alias for one (token, host) pair. Single-account users never touch this — the first credential written lands in `default` and is used automatically. Add more only when the user wants a second account/target (e.g. a jarvis account alongside portal):
+A **profile** is an alias for one (token, host) pair. Single-account users never touch this — the first credential written lands in `default` and is used automatically. Add more only when the user wants a second account/target (e.g. a Stack Automation account alongside portal):
 
 ```bash
 # Add a named profile (own token + host)
-printf '%s' "$TOKEN" | ... torque_api.py configure --token-stdin --profile jarvis --host jarvis.qtorque.io
+printf '%s' "$TOKEN" | ... torque_api.py configure --token-stdin --profile stackautomation --host stackautomation.cisco.com
 
 # List profiles (marks default + active)
 ... torque_api.py configure --list
 
 # Change which profile bare calls use
-... torque_api.py configure --set-default jarvis
+... torque_api.py configure --set-default stackautomation
 
 # Use a specific profile for one call (helper CLI)
-... torque_api.py --profile jarvis GET /spaces
+... torque_api.py --profile stackautomation GET /spaces
 
 # ...or for an example script (route via env — scripts have no --profile flag)
-TORQUE_PROFILE=jarvis python .../examples/get_spaces.py --names-only
+TORQUE_PROFILE=stackautomation python .../examples/get_spaces.py --names-only
 
 # Remove one profile (keeps the rest)
-... torque_api.py configure --clear jarvis
+... torque_api.py configure --clear stackautomation
 ```
 
-When the user phrases intent per-account ("how many spaces on my **jarvis** account"), map the account name to a profile: select it with `--profile jarvis` (helper CLI) or `TORQUE_PROFILE=jarvis` (example scripts). If no such profile exists yet, offer to add it via `configure --profile`.
+When the user phrases intent per-account ("how many spaces on my **stackautomation** account"), map the account name to a profile: select it with `--profile stackautomation` (helper CLI) or `TORQUE_PROFILE=stackautomation` (example scripts). If no such profile exists yet, offer to add it via `configure --profile`.
 
 ## Script manifest
 
@@ -201,15 +201,15 @@ Config file path:
 
 Format (sectioned INI). A legacy flat file with no section header still works — its bare keys read as the `default` profile.
 ```
-default = jarvis
+default = stackautomation
 
 [default]
 token = eyJhbGciOi...
 host  = portal.qtorque.io
 
-[jarvis]
+[stackautomation]
 token = eyJ...
-host  = jarvis.qtorque.io
+host  = stackautomation.cisco.com
 ```
 
 ## Silencing per-call permission prompts
