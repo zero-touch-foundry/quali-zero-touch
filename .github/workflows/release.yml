@@ -52,13 +52,20 @@ jobs:
           zip -r "$SKILLS_ZIP" skills/
           echo "path=$SKILLS_ZIP" >> "$GITHUB_OUTPUT"
 
+      - name: Create unversioned copies
+        run: |
+          cp "dist/${{ steps.version.outputs.name }}-${{ steps.version.outputs.version }}.zip" "dist/${{ steps.version.outputs.name }}.zip"
+          cp "dist/skills-${{ steps.version.outputs.version }}.zip" "dist/skills.zip"
+
       - name: Create draft release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "${{ steps.version.outputs.tag }}" \
             "${{ steps.zip.outputs.path }}" \
+            "dist/${{ steps.version.outputs.name }}.zip" \
             "${{ steps.skills_zip.outputs.path }}" \
+            "dist/skills.zip" \
             --draft \
             --title "${{ steps.version.outputs.name }} ${{ steps.version.outputs.version }}" \
             --notes "Draft release for ${{ steps.version.outputs.name }} v${{ steps.version.outputs.version }}.
