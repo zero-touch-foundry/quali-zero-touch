@@ -45,12 +45,20 @@ jobs:
           test -f "$ZIP" || { echo "::error::Expected $ZIP not found"; ls -la dist/; exit 1; }
           echo "path=$ZIP" >> "$GITHUB_OUTPUT"
 
+      - name: Build skills zip
+        id: skills_zip
+        run: |
+          SKILLS_ZIP="dist/skills-${{ steps.version.outputs.version }}.zip"
+          zip -r "$SKILLS_ZIP" skills/
+          echo "path=$SKILLS_ZIP" >> "$GITHUB_OUTPUT"
+
       - name: Create draft release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "${{ steps.version.outputs.tag }}" \
             "${{ steps.zip.outputs.path }}" \
+            "${{ steps.skills_zip.outputs.path }}" \
             --draft \
             --title "${{ steps.version.outputs.name }} ${{ steps.version.outputs.version }}" \
             --notes "Draft release for ${{ steps.version.outputs.name }} v${{ steps.version.outputs.version }}.
