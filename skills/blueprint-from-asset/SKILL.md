@@ -36,6 +36,16 @@ If multiple types are detected, ask the user which one to wrap (or whether to co
 
 If type can't be determined, ask the user.
 
+**Check for an import-generated asset before treating it as an ordinary reusable module.** If the
+Terraform is flat literal resource blocks with no `variables.tf` at all, the folder is named
+`imported-*`, or the user mentions "import," "brownfield," or "codify this resource" — this is
+almost certainly output from the `import-cloud-resources-as-environment` skill (or an equivalent
+manual import), not an unfinished reusable module. Route to that skill instead of continuing this
+one: wrapping it here and sending it through `reusable-terraform`'s normal parameterization pass
+(Step 3 below) would strip the literal values that pin it to the already-existing resource(s) it
+wraps. See `import-cloud-resources-as-environment`'s `references/track-a-vs-track-b.md` for why
+that matters.
+
 ## Step 2 — Inspect the asset
 
 Read the source files to extract:
@@ -61,7 +71,7 @@ For multi-asset directories, also wire `depends-on` between grains.
 
 For Terragrunt assets specifically, hand off to the `terragrunt-migrate` skill — it does dependency-block and remote_state conversion that's beyond a basic wrap.
 
-For Terraform/OpenTofu assets, also invoke `reusable-terraform` skill to flag any module-side changes needed (e.g., missing outputs, hardcoded values that should be variables).
+For Terraform/OpenTofu assets, also invoke `reusable-terraform` skill to flag any module-side changes needed (e.g., missing outputs, hardcoded values that should be variables) — unless Step 1 identified it as an import-generated asset, in which case its hardcoded values are intentional (see `reusable-terraform`'s Brownfield/Import exception) and should not be flagged as missing parameterization.
 
 For Ansible, invoke `reusable-ansible` skill for similar pre-flight refactor suggestions.
 

@@ -21,6 +21,7 @@ Quali Zero Touch is a Claude Code/Cowork plugin for [Quali Torque](https://www.q
 | **azure-best-practices** | Azure architecture, RBAC, cost optimization, security hardening — Well-Architected guidance for Azure-targeting Torque grains (Terraform, ARM, Ansible). |
 | **k8s-operations** | Kubernetes troubleshooting, manifest authoring, cluster management — useful when investigating Torque Helm/K8s grains. |
 | **repo-conventions** | Canonical Torque repo layout — where blueprints, Terraform/Helm/Ansible assets, workflows, and Rego policies live. Auto-triggers before scaffolding a greenfield project. |
+| **import-cloud-resources-as-environment** | Import existing, running cloud resources (AWS/Azure/GCP/other) into Torque as a managed environment — an auditable alternative to Torque's built-in curate/codify tool. Drives lookup → grouping → Terraform generation → `terraform import` → repo commit/sync → optional blueprint → Torque import API, gated on a Track A (manage the live resource) vs. Track B (also templatize it) goal decision. |
 
 ### Commands (user-invocable skills)
 

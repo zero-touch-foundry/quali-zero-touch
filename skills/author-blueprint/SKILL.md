@@ -21,14 +21,68 @@ Torque blueprints are spec_version: 2 YAML files that define cloud environments 
 
 ---
 
-## Mode Check — Authoring or Debugging?
+## Mode Check — Authoring, Debugging, or Brownfield/Import?
 
 If the user arrived with **an error message from Torque** — a failed validation, a rejected
 upload, a red deployment — you are in **debug mode**. Follow *Debug Mode* below before writing
 or judging anything. Steps 1–7 are an authoring pipeline; they are not a triage procedure, and
 improvising triage from them is how confident wrong answers get produced.
 
+If the blueprint **wraps an already-existing, already-running resource (or set of resources)**
+rather than defining something new — check for this before applying Steps 1–7's normal
+assumptions. See *Brownfield/Import Mode* below.
+
 Otherwise, continue to Step 1.
+
+---
+
+## Brownfield/Import Mode — This Blueprint Represents a Fixed Set of Live Resources, Not a Template
+
+### Recognize it
+
+Look for any of these signals before reviewing or writing:
+- The user says "import," "brownfield," "already exists," "already running," "codify this
+  resource," or mentions `import-cloud-resources-as-environment`.
+- The blueprint's `description`, name, or a grain's `source.path` mentions "import" or "imported"
+  (e.g. `imported-gke-cluster`).
+- The Terraform module the blueprint wraps is entirely literal values with no `variables.tf` — the
+  shape `import-cloud-resources-as-environment` and `reusable-terraform`'s brownfield exception
+  produce by default.
+
+### Apply different rules — do not "fix" it back toward a normal blueprint
+
+A blueprint produced by a brownfield import represents **a specific, fixed set of live
+resources** — one resource or many — not a reusable template. This is not a lesser or unfinished
+version of a normal blueprint — it is a different, equally valid category with the opposite
+defaults, chosen deliberately by whoever ran the import. Full reasoning, the two-model comparison,
+and why it's actually safe: see `import-cloud-resources-as-environment`'s
+`references/track-a-vs-track-b.md`.
+
+Concretely, when authoring or reviewing a brownfield/import blueprint:
+- **Do not** flag hardcoded/literal resource names, IDs, or a lack of `variables.tf`-style
+  parameterization as a defect — that's the intended, correct shape for a Track A import (the
+  overwhelming default; see the reference above). Only flag it if the user has explicitly said
+  they want this blueprint to also work as a launchable template (Track B).
+- **Do not** suggest making the blueprint "more reusable" or removing what looks like duplication
+  with another blueprint — a second, differently-named import of a similar resource type is not
+  duplication, it's two different live resources.
+- **Do not** treat "this can't be relaunched as a second environment" as a bug to fix. It's a
+  property of Track A imports, not a gap in the blueprint (see the second-launch mechanism in the
+  reference above if the user is worried about this).
+- **Do** keep the `backend` block out of the wrapped Terraform module and in the blueprint's
+  `spec.backend` (or the import API's `grains[].backend`) exactly as Step 4's Terraform grain
+  pattern already shows — this matters even more for imports, since the backend key is fixed to
+  one already-existing state file.
+- **Do** check whether any input actually affects the resource it targets. An input wired to a
+  field pinned by `lifecycle.ignore_changes`, or one the provider only reads at creation time, is
+  inert against an already-imported resource — say so plainly in that input's `description` rather
+  than presenting it as a normal, effective input.
+- **Do** name the blueprint for what it is (`Imported GKE Cluster`, not `GKE Cluster`) — a generic
+  name invites exactly the second-launch attempt this mode exists to prevent.
+- If the user is doing a fresh import end-to-end (not just editing/reviewing existing import YAML),
+  point them at the `import-cloud-resources-as-environment` skill instead of authoring the
+  blueprint here in isolation — it owns the full pipeline (resource lookup, grouping, Terraform
+  generation, the Track A/B goal question) that this blueprint is only the last step of.
 
 ---
 
@@ -443,7 +497,8 @@ nested_env:
 - ✅ Use `depends-on` when grain B needs outputs from grain A
 - ✅ Declare all outputs your grains produce that are useful to users
 - ✅ Mark URLs and endpoints with `kind: link` in outputs
-- ✅ Use `{{ envId | downcase }}` to make resource names unique per environment
+- ✅ Use `{{ envId | downcase }}` to make resource names unique per environment — **except in
+  Brownfield/Import Mode**, where resource names are fixed to what already exists in the cloud
 - ✅ Use `sensitive: true` on password/secret inputs
 - ✅ Add `description` to every input — it shows in the launch form
 - ✅ Add `allowed-values` when the set of valid values is known
@@ -462,6 +517,8 @@ nested_env:
 - ❌ Don't call a construct invalid just because this skill's examples don't show it — the
   examples are one idiom, not the full set of what Torque accepts. Check *Valid Patterns That
   Look Wrong* and the schema before flagging anything
+- ❌ Don't flag a Brownfield/Import Mode blueprint's literal resource names, lack of
+  parameterization, or inability to relaunch as defects — see *Brownfield/Import Mode* above
 
 ### Multi-grain architecture patterns
 ```yaml
