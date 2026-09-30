@@ -77,6 +77,14 @@ Classify each finding into one of three severity levels:
   should be an input, and suggest an input name and type.
 - **Respect intent.** Constants like `spec_version: 2` are fine hardcoded. Focus on
   values that vary across environments, teams, or deployments.
+- **Recognize brownfield/import blueprints first.** If the description, name, or a grain's
+  `source.path` mentions "import"/"imported", the user says this wraps an already-existing
+  resource, or the wrapped module is flat literal blocks with no `variables.tf` — this is a
+  `import-cloud-resources-as-environment` Track A blueprint (see its
+  `references/track-a-vs-track-b.md`), not an unfinished normal one. Do **not** flag its hardcoded
+  resource names/IDs or its inability to relaunch as a second environment as findings — that's the
+  intended shape. Only raise parameterization gaps if the user has said this blueprint should also
+  work as a template (Track B).
 - **Think in deployment order.** Trace the depends-on graph mentally. Flag cycles,
   missing edges, and unnecessarily sequential chains that block parallelism.
 - **Consider the end-user.** Inputs without descriptions make the launch form confusing.
