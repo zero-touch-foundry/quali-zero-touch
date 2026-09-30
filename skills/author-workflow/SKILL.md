@@ -125,6 +125,28 @@ workflow:
   timeout: 30                               # Max runtime in minutes (min: 5). Supports Liquid.
 ```
 
+> ⚠️ **Whether a `cron`/`event` workflow gets a launch form depends on when its labels match —
+> not on the trigger type itself.** A blueprint's launch form has its own "Workflows" section
+> listing every `env`/`env_resource` workflow whose `labels-selector` **already matches the
+> blueprint's own declared `labels:`** (or has no `labels-selector` at all — that matches
+> unconditionally). Those workflows behave just like a normal launch: the person launching sees
+> each input and can override it, `cron`/`event` included.
+> The defaults-only fallback only kicks in when the match can't be known yet at launch
+> time — i.e. the workflow's `labels-selector` targets labels the environment only gains
+> *during* provisioning (introspected/dynamic labels, not ones the blueprint declares upfront).
+> For that case, **every** input on the workflow must carry a `default:` — the fallback is
+> all-or-nothing, so one missing default fails the run even for an input the triggered grain
+> never touches.
+> Practical implications:
+> - If you *want* the launching user to see and edit a `cron`/`event` workflow's inputs, give it
+>   a `labels-selector` matching labels the blueprint declares statically (or no selector at
+>   all) — then plain `inputs:` work exactly like a manual trigger's.
+> - If the workflow should stay fully unattended (no per-launch clutter, e.g. admin-only
+>   automation), either target labels that only appear post-launch, or — often more robust
+>   regardless, especially for secrets like API tokens — source those values from
+>   `{{ .params.x }}` (space/account parameter store — valid in `agent.name`, `env-vars`, and
+>   grain inputs) instead of `inputs`.
+
 ### Trigger event conditions
 | Condition | Description |
 |---|---|
@@ -569,6 +591,8 @@ grains:
 - ❌ Don't forget that workflows have **no destroy phase** — shell grain `destroy:` activities will not be called
 - ❌ Don't use `cron` or `event` triggers on `scope: space` workflows — these trigger types require environment context
 - ❌ Don't write `labels-selector: key: value` — the space after `:` makes YAML parse it as a nested mapping, not a string. Use `labels-selector: "key:value"` or omit quotes only when the value contains no colon
+- ❌ Don't leave any workflow input without a `default:` if a `cron`/`event` trigger could ever fire without a launch form — i.e. its `labels-selector` targets labels the environment only gains during provisioning, not ones the blueprint declares upfront. That fallback is all-or-nothing: one missing default fails the automatic run even if that input is unused by the `cron`/`event`-reached grain. Either default every input, or move those values (especially secrets) to `{{ .params.x }}` instead
+- ❌ Don't assume a `cron`/`event` workflow never gets a launch form — if its `labels-selector` matches labels the blueprint declares statically (or it has none), it shows up in the blueprint's launch-form "Workflows" section with editable inputs, same as a `manual` trigger
 
 ### Checklist before presenting a workflow
 - [ ] `spec_version: 2` present
@@ -580,6 +604,7 @@ grains:
 - [ ] All `{{ .grains.X.outputs.Y }}` references have `depends-on: X`
 - [ ] Bindings expressions match the scope (`env_resource` uses `.bindings.attributes`, `env` uses `.bindings.resource_type.<type>.attributes`)
 - [ ] No hardcoded credentials
+- [ ] For any `cron`/`event` trigger whose `labels-selector` targets labels only known post-provisioning, every workflow input has a `default:` (or those values were moved to `{{ .params.x }}` instead of `inputs`)
 
 ---
 
