@@ -3,8 +3,9 @@ name: zero-touch-api
 description: >
   Canonical reference for calling the Torque REST API directly from skills.
   Use this skill whenever another skill needs to fetch from or post to Torque
-  (list spaces / blueprints / environments / catalog, validate or launch
-  blueprints, run workflows, inspect grain status for debugging) and you need
+  (list spaces / blueprints / environments / catalog / Inventory resources,
+  evaluate a resource picker, validate or launch blueprints, run workflows,
+  inspect grain status for debugging) and you need
   to know the exact endpoint, payload shape, response structure, or error
   semantics. Also use when extending the plugin with a new Torque API
   operation — this skill documents the conventions every example script
@@ -143,10 +144,49 @@ Authoritative list of every example script + the operation it wraps. **This is t
 | Launch env (standalone YAML) | `launch_env.py` | `--space S --name N --from-standalone PATH --inputs JSON [--duration ISO8601]` |
 | Run day-2 workflow | `run_workflow.py` | `--space S --workflow W --target-env ID [--target-grain G] [--inputs JSON]` |
 | Find grain usage examples | `get_grain_usage_examples.py` | `--space SPACE --grain NAME` |
+| List Inventory records of a type (pages at 80) | `get_inventory_resources.py` | `--type TYPE [--provider NAME] [--reservable-only] [--name-contains S] [--max N] [--names-only \| --json]` |
+| Evaluate a resource picker (what the launch form offers) | `get_input_allowed_values.py` | `--space S (--yaml FILE --input NAME \| --selector JSON) [--with-value NAME=VALUE ...] [--dry-run] [--json]` |
 
 For server-side filtering, use the script's own filter args (`--name`, `--status`, `--sub-type`, etc.) rather than fetching all + filtering in Python. Server is faster, returns less data, avoids ambiguous-state misclassification.
 
 If the operation isn't in this table, it isn't wrapped yet — use the helper CLI directly (see "Direct helper usage" below) or write a new example script per the extension recipe.
+
+## Inventory and resource pickers
+
+Inventory holds the records Discovery syncs per provider (provider name == target name): Intersight servers, vCenter objects, Kubernetes nodes, AWS resources. A blueprint/workflow input with `type: resource` and a `resource-selector` offers these records on the launch form; its value is the record's reference `id`. The two scripts above wrap the calls; `scripts/inventory_shapes.py` holds the shared, network-free conversions (`python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/inventory_shapes.py" --self-test` checks them).
+
+| Call | Method + path | Notes |
+|---|---|---|
+| List records | `GET /resource?type=<type>&provider=<name>&paging_info.skip=N&paging_info.take=80` | `take` > 80 is **422 `MAX_PAGE_SIZE_EXCEEDED`** (undocumented cap). Server filters: `name` (case-insensitive substring), `reservation_status=available`, `excluded_from_reserving=false`. Response `{"resources": [...], "paging_info": {"full_count": N}}` (a bare list on some builds). |
+| Evaluate a picker | `POST /spaces/{space}/catalog/inputs_allowed_values` | Body `{"input_definitions": [<REST input def>], "inputs_with_values": {"<input>": {"definition": {"name": "<input>", "type": "<type>"}, "value": "<value>"}}}`. Returns one entry per definition: `{name, allowed_values: [{value, display_value, extra_details}], errors, has_more}`. |
+| Exclude / include a record | `PUT /resource/{id}/toggle_excluded_from_reserving` | Body `{"excluded": true, "excluded_reason": "..."}`. Changes account state (needs inventory-management permission); not wrapped on purpose — call it via the helper CLI only when the user asks. |
+
+Record fields: `id` (reference id, the input value), `identifier` (external id: Intersight MoId, vCenter MoRef, ARN, `Node.<name>` on Kubernetes), `name`, `type`, `provider`, `provider_type`, `attributes` (`[{name, value, value_type, description}]`), `reservation_status` (`available` | `reserved`), `reserver_details` (`{env_id, space_name}` or null), `excluded_from_reserving`, `excluded_from_reserving_reason`.
+
+**YAML vs REST — the same picker, spelled twice:**
+
+| Blueprint / workflow YAML (kebab-case) | REST input definition (snake_case) |
+|---|---|
+| `depends-on: 'Target, Region'` (comma-separated string) | `"depends_on": ["Target", "Region"]` (array; a string is 400) |
+| `resource-selector:` | `"resource_selector": {...}` |
+| `provider-name:` / `provider-type:` / `type:` | `"provider_name"` / `"provider_type"` / `"type"` |
+| `reservable-only: true` | `"reservable_only": true` |
+| `attributes:` with items `- Model: UCSX-210C-M6` | `"attributes": [{"name": "Model", "value": "UCSX-210C-M6"}]` |
+| `any-of:` with items `- type: compute.Blade` | `"any_of": [{"type": "compute.Blade"}]` |
+
+Liquid in selector values (`'{{ .inputs.Target | split: "/" | last }}'`) is sent as-is and resolved by the server from `inputs_with_values`.
+
+**Silent pitfalls (all seen on stackautomation.cisco.com, 2026-10):** the REST side ignores what it does not understand and still returns HTTP 200, so a wrong shape looks like "no matching resources" or "everything".
+
+- A kebab key inside `resource_selector` (`provider-name`, `reservable-only`) or any unknown key is dropped: the list **widens** (every Node of every provider; reserved and excluded records come back).
+- A top-level kebab `resource-selector` gives 0 rows plus `EMPTY_PROPERTY` in the entry's `errors`; a YAML-style `- Model: X` attribute gives 0 rows plus `InternalServerError` there.
+- A nested `any_of`, or an empty selector, matches the whole inventory (1000 rows, `has_more: true`). `reservable_only` inside an `any_of` item is ignored; put it at the top.
+- Without `depends_on`, a selector that templates another input fails with `VALUE_CANT_BE_RESOLVED` even when `inputs_with_values` carries the value.
+- Each `inputs_with_values` entry must be `{"definition": {"name", "type"}, "value"}`; a bare string, or a definition without `type`, is 400 `MALFORMED_REQUEST_PARAMETER`.
+- `GET /resource` also ignores unknown query parameters, so a misspelled filter returns the full list.
+- Errors arrive per entry with HTTP 200 — read `errors`, not only `allowed_values`. `get_input_allowed_values.py` exits 1 when `errors` is non-empty.
+
+So never hand-build the REST body from YAML: `get_input_allowed_values.py` converts with `inventory_shapes.selector_yaml_to_rest`, which **refuses** unknown keys, REST spellings, nested `any-of`, `reservable-only` inside `any-of`, and malformed attributes, listing the accepted keys. Use `--dry-run` to see the exact request it would send.
 
 ## Files
 
@@ -155,6 +195,7 @@ skills/zero-touch-api/
 ├── SKILL.md                          ← this file
 ├── scripts/
 │   ├── torque_api.py                 ← helper. CLI + importable (request, exceptions)
+│   ├── inventory_shapes.py           ← YAML→REST picker conversion + Inventory pager (--self-test)
 │   └── examples/                     ← one file per endpoint (see manifest above)
 └── references/
     ├── endpoints.md                  ← URL table, body shapes for POSTs
@@ -223,6 +264,6 @@ The plugin also ships `.claude-plugin/settings.json` with the same allowlist —
 
 ## What this skill does NOT do
 
-- No pagination handling — each example script issues a single request. Endpoints that paginate (catalog when filtered, environments with `paging_info.skip/take`) need per-script logic if/when needed.
+- No pagination in the helper — paging is per script. `get_environments.py` (take 50) and `get_inventory_resources.py` (take 80, the server cap) page until exhausted; the other scripts issue a single request. Other endpoints that paginate (catalog when filtered) need per-script logic if/when needed.
 - No retry / backoff — if you need polling (e.g. wait for an env to become `Active`), write the loop in the calling skill or in a dedicated script. The helper is raw HTTP.
 - No caching — every call hits the API.

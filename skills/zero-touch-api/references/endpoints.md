@@ -26,6 +26,8 @@ Live swagger: <https://portal.qtorque.io/swagger/latest/swagger.yaml>
 | Launch env from registered blueprint | POST | `/spaces/{space}/environments` | see "Launch env body" below | `launch_env.py --from-registered` |
 | Launch env from standalone YAML | POST | `/spaces/{space}/environments` | see "Launch env body" below | `launch_env.py --from-standalone` |
 | Run day-2 workflow | POST | `/spaces/{space}/environments` | workflow-shaped CreateEnvRequest with `entity_metadata` | `run_workflow.py` |
+| List Inventory records (paged) | GET | `/resource` | `type`, `provider`, `name` (substring), `reservation_status`, `excluded_from_reserving`, `paging_info.skip`, `paging_info.take` (**max 80**) | `get_inventory_resources.py` |
+| Evaluate a resource picker (launch-form allowed values) | POST | `/spaces/{space}/catalog/inputs_allowed_values` | `{"input_definitions": [...], "inputs_with_values": {...}}` — snake_case; see SKILL.md "Inventory and resource pickers" | `get_input_allowed_values.py` |
 
 ## Useful endpoints for debug / day-2 (not yet wrapped as example scripts)
 
@@ -38,6 +40,7 @@ Live swagger: <https://portal.qtorque.io/swagger/latest/swagger.yaml>
 | Update env with new IaC | POST | `/spaces/{space}/environments/{env_id}/update_v2` | |
 | Force-terminate stuck env | DELETE | `/spaces/{space}/environments/force/{env_id}` | Irreversible. |
 | Export env-as-code YAML | GET | `/spaces/{space}/environments/{env_id}/eac` | |
+| Exclude / include an Inventory record from reserving | PUT | `/resource/{id}/toggle_excluded_from_reserving` | Body `{"excluded": bool, "excluded_reason": "..."}`. Changes account state; run only when the user asks. |
 
 ## Listing environments — paging & filtering gotchas
 
