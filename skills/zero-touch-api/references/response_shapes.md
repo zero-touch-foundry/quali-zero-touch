@@ -40,14 +40,15 @@ Useful: `content` (raw YAML string).
 
 ```json
 {
-  "is_valid": false,
   "errors": [
-    { "message": "...", "line": 12, "column": 3, "path": "grains.app" }
+    { "code": "...", "message": "...", "line": 12, "column": 3, "path": "grains.app" }
   ],
   "warnings": []
 }
 ```
-Useful: `is_valid`, `errors[].message`, `errors[].line`.
+Request body is snake_case: `{"blueprint_name": "...", "blueprint_raw_64": "<base64-yaml>"}` (camelCase keys get HTTP 422).
+There is no `is_valid` field: the blueprint is valid when `errors` is empty.
+Useful: `errors[].code`, `errors[].message`, `errors[].line`, `warnings[].message`.
 
 ## GET /spaces/{space}/catalog
 

@@ -15,9 +15,9 @@ Validate the blueprint at @$1 before deployment.
      --space <SPACE> --name "$(basename $1 .yaml)" --file "$1"
    ```
 
-   This checks spec_version, grain kinds, schema, and Liquid reference resolution. Parse the resulting JSON `{is_valid, errors, warnings}` (shape in `skills/zero-touch-api/references/response_shapes.md`). Report every `errors[]` entry verbatim with `line` / `column` / `path` when present.
+   This checks spec_version, grain kinds, schema, and Liquid reference resolution. Parse the resulting JSON `{errors, warnings}` (shape in `skills/zero-touch-api/references/response_shapes.md`). Report every `errors[]` entry verbatim with `line` / `column` / `path` when present.
 
-   Exit code 1 = `is_valid: false`. If the space name is not known, ask the user before calling — the endpoint is space-scoped.
+   Exit code 1 = `errors` is non-empty (the response has no `is_valid` field). If the space name is not known, ask the user before calling — the endpoint is space-scoped.
 
 2. **Design + security review** — invoke the `blueprint-review` skill on the same file for higher-level checks the server validator does not cover: hardcoded secrets, missing outputs, drift-prone grain configs, unused inputs, missing `depends-on` ordering, insecure patterns.
 

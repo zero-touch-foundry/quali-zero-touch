@@ -17,7 +17,7 @@ Live swagger: <https://portal.qtorque.io/swagger/latest/swagger.yaml>
 | List workflows (= blueprints with sub_type=workflow) | GET | `/spaces/{space}/blueprints?sub_type=workflow` | — | `get_blueprints.py --sub-type workflow` |
 | Get blueprint YAML (qtorque built-in repo) | GET | `/spaces/{space}/blueprints/{name}/editable` | — | `get_blueprint_yaml.py` |
 | Get blueprint YAML (external repo) | GET | `/spaces/{space}/repositories/{repo}/blueprints/{name}/{branch}/files` | — | `get_blueprint_yaml.py --repo --branch` |
-| Validate blueprint YAML | POST | `/spaces/{space}/validations/blueprints` | `{"blueprintName": "...", "blueprintRaw64": "<base64-yaml>"}` | `validate_blueprint.py` |
+| Validate blueprint YAML | POST | `/spaces/{space}/validations/blueprints` | `{"blueprint_name": "...", "blueprint_raw_64": "<base64-yaml>"}` | `validate_blueprint.py` |
 | List catalog items | GET | `/spaces/{space}/catalog` | optional `search`, `only_favorites` | `get_catalog.py` |
 | List environments (one space, paged) | GET | `/spaces/{space}/environments/v2` | `paging_info.skip`, `paging_info.take`, repeated `status=` | `get_environments.py --space` |
 | List environments (all spaces, paged) | GET | `/operation_hub` | `all=true`, `paging_info.skip`, `paging_info.take`, repeated `status=` | `get_environments.py` (no --space) |
@@ -73,7 +73,7 @@ Response shape (operation_hub):
 {
   "environment_name": "my-env",
   "blueprint_name": "my-blueprint",
-  "source": { "blueprintName": "my-blueprint", "repositoryName": "qtorque" },
+  "source": { "blueprint_name": "my-blueprint", "repository_name": "qtorque" },
   "base64_standalone_blueprint": null,
   "inputs": { "region": "us-east-1" },
   "owner_email": "user@example.com",
@@ -101,5 +101,5 @@ Time format: ISO-8601. Durations like `PT30M`, `PT2H`. Datetimes like `2026-05-1
 
 - **Lists** return JSON arrays at the top level (spaces, blueprints, catalog, environments).
 - **POST /environments** returns 202 with `{"id": "...", "name": "...", "status": "..."}` (or bare string id in some versions — example scripts handle both).
-- **Validate** returns `{"is_valid": bool, "errors": [...], "warnings": [...]}`.
+- **Validate** returns `{"errors": [...], "warnings": [...]}` (no `is_valid` field: valid means `errors` is empty).
 - **Env details** root `status` field is the polling signal (`Active`, `Launching`, `Deployment_Failed`, `Terminated`, ...).

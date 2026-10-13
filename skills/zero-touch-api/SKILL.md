@@ -65,7 +65,7 @@ python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" \
 
 python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/torque_api.py" \
   POST /spaces/my-space/validations/blueprints \
-  --body '{"blueprintName":"foo","blueprintRaw64":"c3BlY192ZXJzaW9uOiAyCg=="}'
+  --body '{"blueprint_name":"foo","blueprint_raw_64":"c3BlY192ZXJzaW9uOiAyCg=="}'
 ```
 
 The helper:
