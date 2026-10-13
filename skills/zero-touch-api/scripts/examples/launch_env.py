@@ -64,7 +64,7 @@ def main() -> int:
             return 2
         repo, bp = args.from_registered.split("/", 1)
         body["blueprint_name"] = bp
-        body["source"] = {"blueprintName": bp, "repositoryName": repo}
+        body["source"] = {"blueprint_name": bp, "repository_name": repo}
     else:
         yaml_text = Path(args.from_standalone).read_text(encoding="utf-8")
         body["base64_standalone_blueprint"] = base64.b64encode(

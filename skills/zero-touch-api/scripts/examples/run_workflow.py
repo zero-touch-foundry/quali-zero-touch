@@ -43,7 +43,7 @@ def main() -> int:
     body = {
         "environment_name": args.name or f"{args.workflow}-run",
         "blueprint_name": args.workflow,
-        "source": {"blueprintName": args.workflow, "repositoryName": "qtorque"},
+        "source": {"blueprint_name": args.workflow, "repository_name": "qtorque"},
         "inputs": json.loads(args.inputs),
         "entity_metadata": entity_metadata,
     }

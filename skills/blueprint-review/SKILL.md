@@ -103,7 +103,7 @@ python "${CLAUDE_PLUGIN_ROOT}/skills/zero-touch-api/scripts/examples/validate_bl
   --space <SPACE> --name <BP> --file <PATH_TO_YAML>
 ```
 
-The script base64-encodes the YAML for you and prints `{is_valid, errors, warnings}` as JSON (exit code 1 if invalid). Include any errors in your report under a separate **Schema Validation** heading.
+The script base64-encodes the YAML for you and prints `{errors, warnings}` as JSON plus an `errors: N, warnings: M` summary on stderr (exit code 1 if `errors` is non-empty). Include any errors in your report under a separate **Schema Validation** heading.
 
 ---
 
